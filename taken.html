@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>単位円とsinグラフ（最終版）</title>
+    <style>
+        body { font-family: sans-serif, 'Times New Roman', serif; text-align: center; font-size: 14px; }
+        h1 { font-size: 24px; }
+        canvas { border: 1px solid #ccc; display: block; margin: 10px auto; }
+        .controls button { font-size: 14px; padding: 8px 12px; margin: 5px; cursor: pointer; }
+        .input-container { margin: 8px auto; padding: 8px; max-width: 780px; border: 1px solid #eee; border-radius: 8px; font-size: 16px; }
+        .input-container label { font-weight: bold; vertical-align: middle; }
+        .input-container input[type="text"] { width: 80px; font-size: 16px; text-align: center; vertical-align: middle; }
+        .table-container { margin: 20px auto; overflow-x: auto; }
+        table { border-collapse: collapse; margin: 0 auto; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; min-width: 45px; }
+        th[data-angle] { cursor: pointer; background-color: #f9f9f9; }
+        th[data-angle]:hover { background-color: #e9e9e9; }
+        .sin-value { color: #c92a2a; font-weight: bold; font-size: 16px; }
+        .sin-value-a { color: #099268; font-weight: bold; font-size: 16px; }
+        .legend { margin-top: 10px; }
+        .legend span { display: inline-block; margin: 0 10px; font-weight: bold; font-size: 16px; }
+        .sin-theta-color { color: #1c7ed6; }
+        .sin-theta-plus-a-color { color: #f76707; }
+        .sin-b-theta-color { color: #37b24d; }
+    </style>
+</head>
+<body>
+    <h1>単位円と y = sin(θ), y = sin(θ+a), y = sin(bθ)</h1>
+    <p>再生ボタンでアニメーション、下のボックスで位相 a と周期 b を調整できます。</p>
+    <canvas id="myCanvas" width="800" height="400"></canvas>
+
+    <div class="controls">
+        <button id="playBtn">再生</button>
+        <button id="stopBtn">停止</button>
+        <button id="resetAnimationBtn">アニメーションリセット</button>
+        <button id="resetPointsBtn">プロットリセット</button>
+    </div>
+
+    <div class="input-container">
+        <label for="phaseInput">位相 a = (</label>
+        <input type="text" id="phaseInput" value="0" placeholder="例: 1/2">
+        <label for="phaseInput">) × π</label>
+    </div>
+    <div class="input-container">
+        <label for="freqInput">周期 b = </label>
+        <input type="text" id="freqInput" value="1" placeholder="例: 2">
+    </div>
+    
+    <div class="legend">
+        <span class="sin-theta-color">■ y = sin(θ)</span>
+        <span class="sin-theta-plus-a-color">■ y = sin(θ+a)</span>
+        <span class="sin-b-theta-color">■ y = sin(bθ)</span>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>θ (rad)</th>
+                    <th data-angle="0">0</th> <th data-angle="30">π/6</th> <th data-angle="45">π/4</th> <th data-angle="60">π/3</th> <th data-angle="90">π/2</th> <th data-angle="120">2π/3</th> <th data-angle="135">3π/4</th> <th data-angle="150">5π/6</th> <th data-angle="180">π</th> <th data-angle="210">7π/6</th> <th data-angle="225">5π/4</th> <th data-angle="240">4π/3</th> <th data-angle="270">3π/2</th> <th data-angle="300">5π/3</th> <th data-angle="315">7π/4</th> <th data-angle="330">11π/6</th> <th data-angle="360">2π</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>sin(θ)</td>
+                    <td id="sin-0" class="sin-value"></td> <td id="sin-30" class="sin-value"></td> <td id="sin-45" class="sin-value"></td> <td id="sin-60" class="sin-value"></td> <td id="sin-90" class="sin-value"></td> <td id="sin-120" class="sin-value"></td> <td id="sin-135" class="sin-value"></td> <td id="sin-150" class="sin-value"></td> <td id="sin-180" class="sin-value"></td> <td id="sin-210" class="sin-value"></td> <td id="sin-225" class="sin-value"></td> <td id="sin-240" class="sin-value"></td> <td id="sin-270" class="sin-value"></td> <td id="sin-300" class="sin-value"></td> <td id="sin-315" class="sin-value"></td> <td id="sin-330" class="sin-value"></td> <td id="sin-360" class="sin-value"></td>
+                </tr>
+                <tr>
+                    <td>sin(θ+a)</td>
+                    <td id="sin-a-0" class="sin-value-a"></td> <td id="sin-a-30" class="sin-value-a"></td> <td id="sin-a-45" class="sin-value-a"></td> <td id="sin-a-60" class="sin-value-a"></td> <td id="sin-a-90" class="sin-value-a"></td> <td id="sin-a-120" class="sin-value-a"></td> <td id="sin-a-135" class="sin-value-a"></td> <td id="sin-a-150" class="sin-value-a"></td> <td id="sin-a-180" class="sin-value-a"></td> <td id="sin-a-210" class="sin-value-a"></td> <td id="sin-a-225" class="sin-value-a"></td> <td id="sin-a-240" class="sin-value-a"></td> <td id="sin-a-270" class="sin-value-a"></td> <td id="sin-a-300" class="sin-value-a"></td> <td id="sin-a-315" class="sin-value-a"></td> <td id="sin-a-330" class="sin-value-a"></td> <td id="sin-a-360" class="sin-value-a"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('myCanvas');
+        const ctx = canvas.getContext('2d');
+        const playBtn = document.getElementById('playBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const resetAnimationBtn = document.getElementById('resetAnimationBtn');
+        const resetPointsBtn = document.getElementById('resetPointsBtn');
+        const phaseInput = document.getElementById('phaseInput');
+        const freqInput = document.getElementById('freqInput'); // ★bの入力
+
+        const canvasWidth = canvas.width, canvasHeight = canvas.height;
+        const circleCenterX = 180, circleCenterY = 200, radius = 80;
+        const graphStartX = 360, graphY = 200;
+        const sinValuesMap = {0:"0",30:"1/2",45:"√2/2",60:"√3/2",90:"1",120:"√3/2",135:"√2/2",150:"1/2",180:"0",210:"-1/2",225:"-√2/2",240:"-√3/2",270:"-1",300:"-√3/2",315:"-√2/2",330:"-1/2",360:"0"};
+        let angle = 0, animationId = null, clickedPoints = [], phaseA = 0;
+        let frequencyB = 1; // ★bの値を保持
+
+        function drawFrame() {
+            ctx.clearRect(0,0,canvasWidth,canvasHeight);
+            drawBackground();
+            // 3つのグラフを描画
+            drawSinCurve('#1c7ed6', 0, 1, angle);          // sin(θ)
+            drawSinCurve('#f76707', phaseA, 1, angle);       // sin(θ+a)
+            drawSinCurve('#37b24d', 0, frequencyB, angle); // sin(bθ)
+            // 3つの動く点を描画
+            drawAnimatedPoints('#1c7ed6', 0, 1);
+            drawAnimatedPoints('#f76707', phaseA, 1);
+            drawAnimatedPoints('#37b24d', 0, frequencyB);
+            clickedPoints.forEach(p=>drawStaticPoint(p));
+        }
+        
+        function drawBackground() {ctx.strokeStyle='#dee2e6';ctx.lineWidth=1;ctx.save();ctx.translate(circleCenterX,circleCenterY);ctx.beginPath();ctx.moveTo(-radius-20,0);ctx.lineTo(radius+20,0);ctx.moveTo(0,-radius-20);ctx.lineTo(0,radius+20);ctx.stroke();ctx.beginPath();ctx.arc(0,0,radius,0,2*Math.PI);ctx.strokeStyle='#adb5bd';ctx.stroke();ctx.restore();ctx.save();ctx.translate(graphStartX,graphY);ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(360+20,0);ctx.moveTo(0,-radius*1.5);ctx.lineTo(0,radius*1.5);ctx.stroke();ctx.fillStyle='#868e96';ctx.textAlign='center';ctx.font='12px Arial';for(let i=0;i<=360;i+=90){const t={0:'0',90:'π/2',180:'π',270:'3π/2',360:'2π'}[i];ctx.fillText(t,i,15)}ctx.restore()}
+        
+        function drawSinCurve(color, phase, freq, limit) {
+            ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 2;
+            ctx.save(); ctx.translate(graphStartX, graphY);
+            for (let i = 0; i <= limit; i++) {
+                const y = -radius * Math.sin(((i * freq) + phase) * Math.PI / 180);
+                if (i === 0) ctx.moveTo(i, y); else ctx.lineTo(i, y);
+            }
+            ctx.stroke(); ctx.restore();
+        }
+
+        function drawAnimatedPoints(color, phase, freq) {
+            const unitCircleAngleRad = (angle * freq + phase) * Math.PI / 180;
+            const pX = radius * Math.cos(unitCircleAngleRad);
+            const pY = -radius * Math.sin(unitCircleAngleRad);
+            const graphX = angle;
+            const graphYVal = -radius * Math.sin(unitCircleAngleRad);
+            ctx.fillStyle = color; ctx.strokeStyle = color;
+            ctx.save(); ctx.translate(circleCenterX, circleCenterY);
+            ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(pX, pY); ctx.stroke();
+            ctx.beginPath(); ctx.arc(pX, pY, 5, 0, 2 * Math.PI); ctx.fill();
+            ctx.restore();
+            ctx.save(); ctx.translate(graphStartX, graphY);
+            ctx.beginPath(); ctx.arc(graphX, graphYVal, 5, 0, 2 * Math.PI); ctx.fill();
+            ctx.restore();
+            ctx.beginPath(); ctx.setLineDash([2, 4]); ctx.strokeStyle = '#868e96';
+            ctx.moveTo(circleCenterX + pX, circleCenterY + pY);
+            ctx.lineTo(graphStartX + graphX, graphY + graphYVal);
+            ctx.stroke(); ctx.setLineDash([]);
+        }
+
+        function drawStaticPoint(a){const y1=-radius*Math.sin(a*Math.PI/180),y2=-radius*Math.sin((a+phaseA)*Math.PI/180),y3=-radius*Math.sin((a*frequencyB)*Math.PI/180);ctx.save();ctx.translate(graphStartX,graphY);ctx.fillStyle='#1c7ed6';ctx.beginPath();ctx.arc(a,y1,4,0,2*Math.PI);ctx.fill();ctx.fillStyle='#f76707';ctx.beginPath();ctx.arc(a,y2,4,0,2*Math.PI);ctx.fill();ctx.fillStyle='#37b24d';ctx.beginPath();ctx.arc(a,y3,4,0,2*Math.PI);ctx.fill();ctx.restore()}
+        
+        function animate(){angle=(angle+1)%361;drawFrame();animationId=requestAnimationFrame(animate)}
+        
+        function updateSinThetaPlusATable(){document.querySelectorAll('th[data-angle]').forEach(t=>{const e=parseInt(t.dataset.angle);if(isNaN(e))return;const n=document.getElementById('sin-'+e),a=document.getElementById('sin-a-'+e);if(n&&a&&n.textContent!==''){const t=e+phaseA,n=((t%360)+360)%360;let s='';let l=!1;for(const o in sinValuesMap){const t=parseInt(o,10);if(Math.abs(t-n)<1e-9){s=sinValuesMap[o],l=!0;break}}l||(s=Math.sin(t*Math.PI/180).toFixed(3)),a.textContent=s}else a&&(a.textContent='')})}
+        
+        function parseCoefficient(str) {
+            str = str.trim(); if (str === '') return NaN;
+            if (str.includes('/')) {
+                const parts = str.split('/'); if (parts.length !== 2) return NaN;
+                const num = parseFloat(parts[0]), den = parseFloat(parts[1]);
+                if (isNaN(num) || isNaN(den) || den === 0) return NaN;
+                return num / den;
+            } else { return parseFloat(str); }
+        }
+
+        playBtn.addEventListener('click', () => { if (animationId === null) animate(); });
+        stopBtn.addEventListener('click', () => { if (animationId !== null) { cancelAnimationFrame(animationId); animationId = null; } });
+        resetAnimationBtn.addEventListener('click', () => { angle = 0; drawFrame(); });
+        resetPointsBtn.addEventListener('click', () => { clickedPoints = []; document.querySelectorAll('.sin-value').forEach(c=>c.textContent=''); updateSinThetaPlusATable(); if (animationId === null) drawFrame(); });
+
+        phaseInput.addEventListener('input', () => {
+            const c = parseCoefficient(phaseInput.value); phaseA = !isNaN(c) ? c * 180 : 0;
+            updateSinThetaPlusATable(); if (animationId === null) drawFrame();
+        });
+
+        freqInput.addEventListener('input', () => {
+            const c = parseCoefficient(freqInput.value); frequencyB = !isNaN(c) && c > 0 ? c : 1; // bは正の値のみ
+            if (animationId === null) drawFrame();
+        });
+        
+        document.querySelectorAll('th[data-angle]').forEach(th => {
+            th.addEventListener('click', event => {
+                const a = parseInt(event.target.dataset.angle); if (isNaN(a)) return;
+                const s = sinValuesMap[a], c = document.getElementById('sin-' + a);
+                if (c && s !== undefined) c.textContent = s;
+                if (!clickedPoints.includes(a)) clickedPoints.push(a);
+                updateSinThetaPlusATable(); if (animationId === null) drawFrame();
+            });
+        });
+
+        window.addEventListener('load', () => drawFrame());
+    </script>
+</body>
+</html>
