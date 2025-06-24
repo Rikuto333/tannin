@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>単位円とsinグラフ（完全版）</title>
+    <title>単位円とsinグラフ（レイアウト変更版）</title>
     <style>
         body {
             font-family: sans-serif, 'Times New Roman', serif;
@@ -13,14 +13,27 @@
         canvas { border: 1px solid #ccc; display: block; margin: 10px auto; }
         .controls button { font-size: 14px; padding: 8px 12px; margin: 5px; cursor: pointer; }
         
+        /* --- ここからレイアウト変更のためのCSS --- */
         .control-panel {
-            display: inline-block;
+            display: inline-flex; /* 横並びにするために flex に変更 */
+            flex-direction: row;
+            gap: 25px; /* 列間のスペース */
             border: 1px solid #ddd;
             border-radius: 8px;
             padding: 15px;
             margin: 10px auto;
             text-align: left;
         }
+        .control-column {
+            display: flex;
+            flex-direction: column;
+        }
+        .control-column:first-of-type {
+            padding-right: 25px;
+            border-right: 1px solid #eee;
+        }
+        /* --- ここまで --- */
+
         .control-row {
             display: flex;
             align-items: center;
@@ -61,13 +74,11 @@
         th[data-angle] { cursor: pointer; background-color: #f9f9f9; }
         th[data-angle]:hover { background-color: #e9e9e9; }
         
-        /* ★ テーブルの値の色のスタイルをグラフの色と統一 */
         .sin-value { color: #1c7ed6; font-weight: bold; font-size: 16px; }
         .sin-value-a { color: #f76707; font-weight: bold; font-size: 16px; }
-        .sin-value-b { color: #37b24d; font-weight: bold; font-size: 16px; } /* bθ用のスタイルを追加 */
+        .sin-value-b { color: #37b24d; font-weight: bold; font-size: 16px; }
         .sin-value-cd { color: #845ef7; font-weight: bold; font-size: 16px; }
 
-        /* カラー定義 */
         .sin-theta-color { color: #1c7ed6; }
         .sin-theta-plus-a-color { color: #f76707; }
         .sin-b-theta-color { color: #37b24d; }
@@ -75,7 +86,7 @@
     </style>
 </head>
 <body>
-    <canvas id="myCanvas" width="800" height="400"></canvas>
+    <canvas id="myCanvas" width="1200" height="400"></canvas>
 
     <div class="controls">
         <button id="playBtn">再生</button>
@@ -85,38 +96,41 @@
     </div>
 
     <div class="control-panel">
-        <div class="control-row">
-            <label class="graph-label"><input type="checkbox" id="toggleSinTheta" checked> <span class="sin-theta-color">y = sin(θ)</span></label>
-        </div>
-        <div class="control-row">
-            <label class="graph-label"><input type="checkbox" id="toggleSinThetaPlusA" checked> <span class="sin-theta-plus-a-color">y = sin(θ+a)</span></label>
-            <div class="input-group">
-                <label for="phaseInput">位相 a = (</label>
-                <input type="text" id="phaseInput" value="0" placeholder="例: 1/2">
-                <label>) × π</label>
+        <div class="control-column">
+            <div class="control-row">
+                <label class="graph-label"><input type="checkbox" id="toggleSinTheta" checked> <span class="sin-theta-color">y = sin(θ)</span></label>
+            </div>
+            <div class="control-row">
+                <label class="graph-label"><input type="checkbox" id="toggleSinThetaPlusA" checked> <span class="sin-theta-plus-a-color">y = sin(θ+a)</span></label>
+                <div class="input-group">
+                    <label for="phaseInput">位相 a = (</label>
+                    <input type="text" id="phaseInput" value="0" placeholder="例: 1/2">
+                    <label>) × π</label>
+                </div>
             </div>
         </div>
-        <div class="control-row">
-            <label class="graph-label"><input type="checkbox" id="toggleSinBTheta" checked> <span class="sin-b-theta-color">y = sin(bθ)</span></label>
-            <div class="input-group">
-                <label for="freqInput">周期 b = </label>
-                <input type="text" id="freqInput" value="1" placeholder="例: 2">
+        <div class="control-column">
+            <div class="control-row">
+                <label class="graph-label"><input type="checkbox" id="toggleSinBTheta" checked> <span class="sin-b-theta-color">y = sin(bθ)</span></label>
+                <div class="input-group">
+                    <label for="freqInput">周期 b = </label>
+                    <input type="text" id="freqInput" value="1" placeholder="例: 2">
+                </div>
             </div>
-        </div>
-        <div class="control-row">
-            <label class="graph-label"><input type="checkbox" id="toggleSinCThetaPlusD" checked> <span class="sin-c-theta-plus-d-color">y = sin(cθ+d)</span></label>
-            <div class="input-group">
-                <label for="freqCInput">周期 c = </label>
-                <input type="text" id="freqCInput" value="1" placeholder="例: 2">
-            </div>
-            <div class="input-group">
-                <label for="phaseDInput">位相 d = (</label>
-                <input type="text" id="phaseDInput" value="0" placeholder="例: 1/2">
-                <label>) × π</label>
+            <div class="control-row">
+                <label class="graph-label"><input type="checkbox" id="toggleSinCThetaPlusD" checked> <span class="sin-c-theta-plus-d-color">y = sin(cθ+d)</span></label>
+                <div class="input-group">
+                    <label for="freqCInput">周期 c = </label>
+                    <input type="text" id="freqCInput" value="1" placeholder="例: 2">
+                </div>
+                <div class="input-group">
+                    <label for="phaseDInput">位相 d = (</label>
+                    <input type="text" id="phaseDInput" value="0" placeholder="例: 1/2">
+                    <label>) × π</label>
+                </div>
             </div>
         </div>
     </div>
-    
     <div class="table-container">
         <table>
             <thead>
@@ -166,7 +180,7 @@
         
         const rowSinTheta = document.getElementById('rowSinTheta');
         const rowSinThetaPlusA = document.getElementById('rowSinThetaPlusA');
-        const rowSinBTheta = document.getElementById('rowSinBTheta'); // ★bθの行を取得
+        const rowSinBTheta = document.getElementById('rowSinBTheta');
         const rowSinCThetaPlusD = document.getElementById('rowSinCThetaPlusD');
 
         // --- 定数・変数定義 ---
@@ -210,7 +224,27 @@
             clickedPoints.forEach(p=>drawStaticPoint(p));
         }
         
-        function drawBackground() {ctx.strokeStyle='#dee2e6';ctx.lineWidth=1;ctx.save();ctx.translate(circleCenterX,circleCenterY);ctx.beginPath();ctx.moveTo(-radius-20,0);ctx.lineTo(radius+20,0);ctx.moveTo(0,-radius-20);ctx.lineTo(0,radius+20);ctx.stroke();ctx.beginPath();ctx.arc(0,0,radius,0,2*Math.PI);ctx.strokeStyle='#adb5bd';ctx.stroke();ctx.restore();ctx.save();ctx.translate(graphStartX,graphY);ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(360+20,0);ctx.moveTo(0,-radius*1.5);ctx.lineTo(0,radius*1.5);ctx.stroke();ctx.fillStyle='#868e96';ctx.textAlign='center';ctx.font='12px Arial';for(let i=0;i<=360;i+=90){const t={0:'0',90:'π/2',180:'π',270:'3π/2',360:'2π'}[i];ctx.fillText(t,i,15)}ctx.restore()}
+        function drawBackground() {
+            ctx.strokeStyle = '#dee2e6'; ctx.lineWidth = 1;
+            // --- 単位円 ---
+            ctx.save();
+            ctx.translate(circleCenterX, circleCenterY);
+            ctx.beginPath(); ctx.moveTo(-radius - 20, 0); ctx.lineTo(radius + 20, 0); ctx.moveTo(0, -radius - 20); ctx.lineTo(0, radius + 20); ctx.stroke(); // 軸
+            ctx.beginPath(); ctx.arc(0, 0, radius, 0, 2 * Math.PI); ctx.strokeStyle = '#adb5bd'; ctx.stroke(); // 円
+            ctx.restore();
+            // --- グラフエリア ---
+            ctx.save();
+            ctx.translate(graphStartX, graphY);
+            ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(720 + 20, 0); ctx.moveTo(0, -radius * 1.5); ctx.lineTo(0, radius * 1.5); ctx.stroke(); // 軸
+            ctx.fillStyle = '#868e96'; ctx.textAlign = 'center'; ctx.font = '12px Arial';
+            // X軸の目盛りを4πまで描画
+            for (let i = 0; i <= 720; i += 90) {
+                const labels = {0:'0', 90:'π/2', 180:'π', 270:'3π/2', 360:'2π', 450:'5π/2', 540:'3π', 630:'7π/2', 720:'4π'};
+                const text = labels[i];
+                if (text) ctx.fillText(text, i, 15);
+            }
+            ctx.restore();
+        }
         
         function drawSinCurve(color, phase, freq, limit) {
             ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 2;
@@ -247,17 +281,16 @@
         }
         
         // --- 制御・計算関数 ---
-        function animate(){angle=(angle+1)%361;drawFrame();animationId=requestAnimationFrame(animate)}
+        function animate(){angle=(angle+1)%721;drawFrame();animationId=requestAnimationFrame(animate)}
         
         function updateAllTables() {
             updateSinThetaPlusATable();
-            updateSinBThetaTable(); // ★bθのテーブル更新を追加
+            updateSinBThetaTable();
             updateSinCThetaPlusDTable();
         }
         
         function updateSinThetaPlusATable(){document.querySelectorAll('th[data-angle]').forEach(t=>{const e=parseInt(t.dataset.angle);if(isNaN(e))return;const n=document.getElementById('sin-'+e),a=document.getElementById('sin-a-'+e);if(n&&a&&n.textContent!==''){const t=e+phaseA,n=((t%360)+360)%360;let s='';let l=!1;for(const o in sinValuesMap){const t=parseInt(o,10);if(Math.abs(t-n)<.001){s=sinValuesMap[o],l=!0;break}}l||(s=Math.sin(t*Math.PI/180).toFixed(3)),a.textContent=s}else a&&(a.textContent='')})}
         
-        // ★sin(bθ)のテーブル更新関数を追加
         function updateSinBThetaTable() {
             document.querySelectorAll('th[data-angle]').forEach(th => {
                 const angleDeg = parseInt(th.dataset.angle);
@@ -336,7 +369,7 @@
 
         freqInput.addEventListener('input', () => {
             const val = parseCoefficient(freqInput.value); frequencyB = !isNaN(val) && val > 0 ? val : 1;
-            updateSinBThetaTable(); // ★bθのテーブルを更新
+            updateSinBThetaTable();
             drawFrame();
         });
 
@@ -355,7 +388,8 @@
         document.querySelectorAll('th[data-angle]').forEach(th => {
             th.addEventListener('click', event => {
                 const a = parseInt(event.target.dataset.angle); if (isNaN(a)) return;
-                const s = sinValuesMap[a], c = document.getElementById('sin-' + a);
+                const s = sinValuesMap[a];
+                const c = document.getElementById('sin-' + a);
                 if (c && s !== undefined) c.textContent = s;
                 if (!clickedPoints.includes(a)) clickedPoints.push(a);
                 updateAllTables();
@@ -375,7 +409,7 @@
         });
         toggleSinBTheta.addEventListener('change', (e) => {
             show.sinBTheta = e.target.checked;
-            rowSinBTheta.style.display = e.target.checked ? '' : 'none'; // ★行の表示/非表示を連動
+            rowSinBTheta.style.display = e.target.checked ? '' : 'none';
             drawFrame();
         });
         toggleSinCThetaPlusD.addEventListener('change', (e) => {
