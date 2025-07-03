@@ -10,6 +10,11 @@
             font-size: 14px;
             zoom: 65%;
         }
+        /* 数学テキストのためのスタイル */
+        var {
+            font-style: italic;
+            font-family: 'Times New Roman', serif;
+        }
         canvas { border: 1px solid #ccc; display: block; margin: 10px auto; }
         .controls button { font-size: 14px; padding: 8px 12px; margin: 5px; cursor: pointer; }
         
@@ -68,7 +73,7 @@
 
         .table-container { margin: 20px auto; overflow-x: auto; }
         table { border-collapse: collapse; margin: 0 auto; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; min-width: 45px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; min-width: 55px; vertical-align: middle; }
         th[data-angle] { cursor: pointer; background-color: #f9f9f9; }
         th[data-angle]:hover { background-color: #e9e9e9; }
         
@@ -81,6 +86,29 @@
         .sin-theta-plus-a-color { color: #f76707; }
         .sin-b-theta-color { color: #37b24d; }
         .sin-c-theta-plus-d-color { color: #845ef7; }
+
+        /* --- 分数表示のためのCSS --- */
+        .fraction-container {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .fraction-container > span:first-child {
+            padding-right: 0.15em;
+        }
+        .fraction {
+            display: inline-flex;
+            flex-direction: column;
+            text-align: center;
+            vertical-align: middle;
+        }
+        .numerator {
+            border-bottom: 1.5px solid currentColor;
+            padding: 0 0.2em;
+        }
+        .denominator {
+            padding: 0 0.2em;
+        }
     </style>
 </head>
 <body>
@@ -96,35 +124,35 @@
     <div class="control-panel">
         <div class="control-column">
             <div class="control-row">
-                <label class="graph-label"><input type="checkbox" id="toggleSinTheta" checked> <span class="sin-theta-color">y = sin(θ)</span></label>
+                <label class="graph-label"><input type="checkbox" id="toggleSinTheta" checked> <span class="sin-theta-color"><var>y = sin(θ)</var></span></label>
             </div>
             <div class="control-row">
-                <label class="graph-label"><input type="checkbox" id="toggleSinThetaPlusA" checked> <span class="sin-theta-plus-a-color">y = sin(θ+a)</span></label>
+                <label class="graph-label"><input type="checkbox" id="toggleSinThetaPlusA" checked> <span class="sin-theta-plus-a-color"><var>y = sin(θ+a)</var></span></label>
                 <div class="input-group">
-                    <label for="phaseInput">位相 a = (</label>
+                    <label for="phaseInput">位相 <var>a =</var> (</label>
                     <input type="text" id="phaseInput" value="0" placeholder="例: 1/2">
-                    <label>) × π</label>
+                    <label>) <var>× π</var></label>
                 </div>
             </div>
         </div>
         <div class="control-column">
             <div class="control-row">
-                <label class="graph-label"><input type="checkbox" id="toggleSinBTheta" checked> <span class="sin-b-theta-color">y = sin(bθ)</span></label>
+                <label class="graph-label"><input type="checkbox" id="toggleSinBTheta" checked> <span class="sin-b-theta-color"><var>y = sin(bθ)</var></span></label>
                 <div class="input-group">
-                    <label for="freqInput">周期 b = </label>
+                    <label for="freqInput">周期 <var>b =</var></label>
                     <input type="text" id="freqInput" value="1" placeholder="例: 2">
                 </div>
             </div>
             <div class="control-row">
-                <label class="graph-label"><input type="checkbox" id="toggleSinCThetaPlusD" checked> <span class="sin-c-theta-plus-d-color">y = sin(cθ+d)</span></label>
+                <label class="graph-label"><input type="checkbox" id="toggleSinCThetaPlusD" checked> <span class="sin-c-theta-plus-d-color"><var>y = sin(cθ+d)</var></span></label>
                 <div class="input-group">
-                    <label for="freqCInput">周期 c = </label>
+                    <label for="freqCInput">周期 <var>c =</var></label>
                     <input type="text" id="freqCInput" value="1" placeholder="例: 2">
                 </div>
                 <div class="input-group">
-                    <label for="phaseDInput">位相 d = (</label>
+                    <label for="phaseDInput">位相 <var>d =</var> (</label>
                     <input type="text" id="phaseDInput" value="0" placeholder="例: 1/2">
-                    <label>) × π</label>
+                    <label>) <var>× π</var></label>
                 </div>
             </div>
         </div>
@@ -134,25 +162,41 @@
         <table>
             <thead>
                 <tr>
-                    <th>θ (rad)</th>
-                    <th data-angle="0">0</th> <th data-angle="30">π/6</th> <th data-angle="45">π/4</th> <th data-angle="60">π/3</th> <th data-angle="90">π/2</th> <th data-angle="120">2π/3</th> <th data-angle="135">3π/4</th> <th data-angle="150">5π/6</th> <th data-angle="180">π</th> <th data-angle="210">7π/6</th> <th data-angle="225">5π/4</th> <th data-angle="240">4π/3</th> <th data-angle="270">3π/2</th> <th data-angle="300">5π/3</th> <th data-angle="315">7π/4</th> <th data-angle="330">11π/6</th> <th data-angle="360">2π</th>
+                    <th><var>θ</var></th>
+                    <th data-angle="0">0</th>
+                    <th data-angle="30"><span class="fraction-container"><span class="fraction"><span class="numerator">π</span><span class="denominator">6</span></span></span></th>
+                    <th data-angle="45"><span class="fraction-container"><span class="fraction"><span class="numerator">π</span><span class="denominator">4</span></span></span></th>
+                    <th data-angle="60"><span class="fraction-container"><span class="fraction"><span class="numerator">π</span><span class="denominator">3</span></span></span></th>
+                    <th data-angle="90"><span class="fraction-container"><span class="fraction"><span class="numerator">π</span><span class="denominator">2</span></span></span></th>
+                    <th data-angle="120"><span class="fraction-container"><span class="fraction"><span class="numerator">2π</span><span class="denominator">3</span></span></span></th>
+                    <th data-angle="135"><span class="fraction-container"><span class="fraction"><span class="numerator">3π</span><span class="denominator">4</span></span></span></th>
+                    <th data-angle="150"><span class="fraction-container"><span class="fraction"><span class="numerator">5π</span><span class="denominator">6</span></span></span></th>
+                    <th data-angle="180">π</th>
+                    <th data-angle="210"><span class="fraction-container"><span class="fraction"><span class="numerator">7π</span><span class="denominator">6</span></span></span></th>
+                    <th data-angle="225"><span class="fraction-container"><span class="fraction"><span class="numerator">5π</span><span class="denominator">4</span></span></span></th>
+                    <th data-angle="240"><span class="fraction-container"><span class="fraction"><span class="numerator">4π</span><span class="denominator">3</span></span></span></th>
+                    <th data-angle="270"><span class="fraction-container"><span class="fraction"><span class="numerator">3π</span><span class="denominator">2</span></span></span></th>
+                    <th data-angle="300"><span class="fraction-container"><span class="fraction"><span class="numerator">5π</span><span class="denominator">3</span></span></span></th>
+                    <th data-angle="315"><span class="fraction-container"><span class="fraction"><span class="numerator">7π</span><span class="denominator">4</span></span></span></th>
+                    <th data-angle="330"><span class="fraction-container"><span class="fraction"><span class="numerator">11π</span><span class="denominator">6</span></span></span></th>
+                    <th data-angle="360">2π</th>
                 </tr>
             </thead>
             <tbody>
                 <tr id="rowSinTheta">
-                    <td>sin(θ)</td>
+                    <td><var>sin(θ)</var></td>
                     <td id="sin-0" class="sin-value"></td> <td id="sin-30" class="sin-value"></td> <td id="sin-45" class="sin-value"></td> <td id="sin-60" class="sin-value"></td> <td id="sin-90" class="sin-value"></td> <td id="sin-120" class="sin-value"></td> <td id="sin-135" class="sin-value"></td> <td id="sin-150" class="sin-value"></td> <td id="sin-180" class="sin-value"></td> <td id="sin-210" class="sin-value"></td> <td id="sin-225" class="sin-value"></td> <td id="sin-240" class="sin-value"></td> <td id="sin-270" class="sin-value"></td> <td id="sin-300" class="sin-value"></td> <td id="sin-315" class="sin-value"></td> <td id="sin-330" class="sin-value"></td> <td id="sin-360" class="sin-value"></td>
                 </tr>
                 <tr id="rowSinThetaPlusA">
-                    <td>sin(θ+a)</td>
+                    <td><var>sin(θ+a)</var></td>
                     <td id="sin-a-0" class="sin-value-a"></td> <td id="sin-a-30" class="sin-value-a"></td> <td id="sin-a-45" class="sin-value-a"></td> <td id="sin-a-60" class="sin-value-a"></td> <td id="sin-a-90" class="sin-value-a"></td> <td id="sin-a-120" class="sin-value-a"></td> <td id="sin-a-135" class="sin-value-a"></td> <td id="sin-a-150" class="sin-value-a"></td> <td id="sin-a-180" class="sin-value-a"></td> <td id="sin-a-210" class="sin-value-a"></td> <td id="sin-a-225" class="sin-value-a"></td> <td id="sin-a-240" class="sin-value-a"></td> <td id="sin-a-270" class="sin-value-a"></td> <td id="sin-a-300" class="sin-value-a"></td> <td id="sin-a-315" class="sin-value-a"></td> <td id="sin-a-330" class="sin-value-a"></td> <td id="sin-a-360" class="sin-value-a"></td>
                 </tr>
                 <tr id="rowSinBTheta">
-                    <td>sin(bθ)</td>
+                    <td><var>sin(bθ)</var></td>
                     <td id="sin-b-0" class="sin-value-b"></td> <td id="sin-b-30" class="sin-value-b"></td> <td id="sin-b-45" class="sin-value-b"></td> <td id="sin-b-60" class="sin-value-b"></td> <td id="sin-b-90" class="sin-value-b"></td> <td id="sin-b-120" class="sin-value-b"></td> <td id="sin-b-135" class="sin-value-b"></td> <td id="sin-b-150" class="sin-value-b"></td> <td id="sin-b-180" class="sin-value-b"></td> <td id="sin-b-210" class="sin-value-b"></td> <td id="sin-b-225" class="sin-value-b"></td> <td id="sin-b-240" class="sin-value-b"></td> <td id="sin-b-270" class="sin-value-b"></td> <td id="sin-b-300" class="sin-value-b"></td> <td id="sin-b-315" class="sin-value-b"></td> <td id="sin-b-330" class="sin-value-b"></td> <td id="sin-b-360" class="sin-value-b"></td>
                 </tr>
                 <tr id="rowSinCThetaPlusD">
-                    <td>sin(cθ+d)</td>
+                    <td><var>sin(cθ+d)</var></td>
                     <td id="sin-cd-0" class="sin-value-cd"></td> <td id="sin-cd-30" class="sin-value-cd"></td> <td id="sin-cd-45" class="sin-value-cd"></td> <td id="sin-cd-60" class="sin-value-cd"></td> <td id="sin-cd-90" class="sin-value-cd"></td> <td id="sin-cd-120" class="sin-value-cd"></td> <td id="sin-cd-135" class="sin-value-cd"></td> <td id="sin-cd-150" class="sin-value-cd"></td> <td id="sin-cd-180" class="sin-value-cd"></td> <td id="sin-cd-210" class="sin-value-cd"></td> <td id="sin-cd-225" class="sin-value-cd"></td> <td id="sin-cd-240" class="sin-value-cd"></td> <td id="sin-cd-270" class="sin-value-cd"></td> <td id="sin-cd-300" class="sin-value-cd"></td> <td id="sin-cd-315" class="sin-value-cd"></td> <td id="sin-cd-330" class="sin-value-cd"></td> <td id="sin-cd-360" class="sin-value-cd"></td>
                 </tr>
             </tbody>
@@ -224,61 +268,138 @@
         }
         
         function drawBackground() {
-            ctx.strokeStyle = '#dee2e6'; ctx.lineWidth = 1;
+            const axisColor = '#343a40';
+            const gridColor = '#dee2e6';
             const labelColor = '#868e96';
+            const axisLabelColor = '#000';
             const labelFont = '14px Arial';
             const smallLabelFont = '12px Arial';
+            const axisLabelFont = 'italic 16px "Times New Roman"';
+            const arrowheadSize = 8;
 
-            // --- 単位円 ---
+            ctx.lineWidth = 1.5;
+
+            // --- 単位円 (Unit Circle) ---
             ctx.save();
             ctx.translate(circleCenterX, circleCenterY);
-            ctx.beginPath(); ctx.moveTo(-radius - 20, 0); ctx.lineTo(radius + 20, 0); ctx.moveTo(0, -radius - 20); ctx.lineTo(0, radius + 20); ctx.stroke(); // 軸
-            ctx.beginPath(); ctx.arc(0, 0, radius, 0, 2 * Math.PI); ctx.strokeStyle = '#adb5bd'; ctx.stroke(); // 円
             
+            ctx.strokeStyle = axisColor;
+            // Y-Axis
+            ctx.beginPath();
+            ctx.moveTo(0, radius + 20); ctx.lineTo(0, -radius - 20);
+            ctx.moveTo(0, -radius - 20); ctx.lineTo(-arrowheadSize / 2, -radius - 20 + arrowheadSize);
+            ctx.moveTo(0, -radius - 20); ctx.lineTo(arrowheadSize / 2, -radius - 20 + arrowheadSize);
+            ctx.stroke();
+            // X-Axis
+            ctx.beginPath();
+            ctx.moveTo(-radius - 20, 0); ctx.lineTo(radius + 20, 0);
+            ctx.moveTo(radius + 20, 0); ctx.lineTo(radius + 20 - arrowheadSize, -arrowheadSize / 2);
+            ctx.moveTo(radius + 20, 0); ctx.lineTo(radius + 20 - arrowheadSize, arrowheadSize / 2);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(0, 0, radius, 0, 2 * Math.PI);
+            ctx.strokeStyle = '#adb5bd';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            ctx.lineWidth = 1.5;
+
+            // ★★★★★ 目盛りラベル(1, -1, 0)の位置を再調整 ★★★★★
             ctx.fillStyle = labelColor;
             ctx.font = labelFont;
             
+            // Right '1'
             ctx.textAlign = 'center';
             ctx.textBaseline = 'top';
-            ctx.fillText('1', radius, 8);
-            ctx.fillText('-1', -radius, 8);
-            
-            ctx.textAlign = 'right';
-            ctx.textBaseline = 'middle';
-            ctx.fillText('1', -8, -radius);
-            ctx.fillText('-1', -8, radius);
+            ctx.fillText('1', 90, 8);
 
+            // Left '-1'
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.fillText('-1', -90, 8);
+
+            // Top '1'
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('1', 8, -90);
+
+            // Bottom '-1'
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('-1', 8, 90);
+            
+            // Origin '0'
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'top';
+            ctx.fillText('0', -5, 5);
+
+            // ★★★★★ 軸ラベル(x, y)を矢印のさらに外側に配置 ★★★★★
+            ctx.fillStyle = axisLabelColor;
+            ctx.font = axisLabelFont;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('y', 0, -radius - 28);
+            ctx.fillText('x', radius + 28, 0);
+            
             ctx.restore();
 
-            // --- グラフエリア ---
+            // --- グラフエリア (Graph Area) ---
             ctx.save();
             ctx.translate(graphStartX, graphY);
-            ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(720 + 20, 0); ctx.moveTo(0, -radius * 1.5); ctx.lineTo(0, radius * 1.5); ctx.stroke(); // 軸
-            
-            // --- ここからグラフのY軸目盛りを追加 ---
+
+            ctx.strokeStyle = axisColor;
+            // Y-Axis
+            ctx.beginPath();
+            ctx.moveTo(0, radius * 1.5); ctx.lineTo(0, -radius * 1.5);
+            ctx.moveTo(0, -radius * 1.5); ctx.lineTo(-arrowheadSize / 2, -radius * 1.5 + arrowheadSize);
+            ctx.moveTo(0, -radius * 1.5); ctx.lineTo(arrowheadSize / 2, -radius * 1.5 + arrowheadSize);
+            ctx.stroke();
+            // X-Axis (θ)
+            ctx.beginPath();
+            ctx.moveTo(0, 0); ctx.lineTo(720 + 20, 0);
+            ctx.moveTo(720 + 20, 0); ctx.lineTo(720 + 20 - arrowheadSize, -arrowheadSize / 2);
+            ctx.moveTo(720 + 20, 0); ctx.lineTo(720 + 20 - arrowheadSize, arrowheadSize / 2);
+            ctx.stroke();
+
+            ctx.strokeStyle = gridColor;
+            ctx.lineWidth = 1;
             ctx.fillStyle = labelColor;
             ctx.font = labelFont;
             ctx.textAlign = 'right';
             ctx.textBaseline = 'middle';
-
             ctx.fillText('1', -8, -radius);
             ctx.beginPath(); ctx.moveTo(-4, -radius); ctx.lineTo(4, -radius); ctx.stroke();
-            
             ctx.fillText('-1', -8, radius);
             ctx.beginPath(); ctx.moveTo(-4, radius); ctx.lineTo(4, radius); ctx.stroke();
-            // --- ここまで ---
-
-            ctx.textAlign = 'center';
+            
             ctx.font = smallLabelFont;
-            // X軸の目盛りを4πまで描画
             for (let i = 0; i <= 720; i += 90) {
                 const labels = {0:'0', 90:'π/2', 180:'π', 270:'3π/2', 360:'2π', 450:'5π/2', 540:'3π', 630:'7π/2', 720:'4π'};
                 const text = labels[i];
-                if (text) ctx.fillText(text, i, 15);
+                if (text) {
+                    if (i === 0) {
+                        ctx.textAlign = 'right';
+                        ctx.textBaseline = 'top';
+                        ctx.fillText('0', -5, 5);
+                    } else {
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'top';
+                        ctx.fillText(text, i, 15);
+                    }
+                }
             }
+            
+            // ★★★★★ 軸ラベル(θ, y)を矢印のさらに外側に配置 ★★★★★
+            ctx.fillStyle = axisLabelColor;
+            ctx.font = axisLabelFont;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('y', 0, -radius * 1.5 - 20);
+            ctx.fillText('θ', 720 + 28, 0);
+
             ctx.restore();
         }
-        
+
         function drawSinCurve(color, phase, freq, limit) {
             ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 2;
             ctx.save(); ctx.translate(graphStartX, graphY);
@@ -316,13 +437,35 @@
         // --- 制御・計算関数 ---
         function animate(){angle=(angle+1)%721;drawFrame();animationId=requestAnimationFrame(animate)}
         
+        function formatFraction(valueStr) {
+            if (typeof valueStr !== 'string' || !valueStr.includes('/')) {
+                return valueStr;
+            }
+            let prefix = '';
+            if (valueStr.startsWith('-')) {
+                prefix = '<span>-</span>';
+                valueStr = valueStr.substring(1);
+            }
+            const parts = valueStr.split('/');
+            if (parts.length !== 2) {
+                return valueStr;
+            }
+            const [numerator, denominator] = parts;
+            const fractionHTML = `
+                <span class="fraction">
+                    <span class="numerator">${numerator}</span>
+                    <span class="denominator">${denominator}</span>
+                </span>`;
+            return `<span class="fraction-container">${prefix}${fractionHTML}</span>`;
+        }
+
         function updateAllTables() {
             updateSinThetaPlusATable();
             updateSinBThetaTable();
             updateSinCThetaPlusDTable();
         }
         
-        function updateSinThetaPlusATable(){document.querySelectorAll('th[data-angle]').forEach(t=>{const e=parseInt(t.dataset.angle);if(isNaN(e))return;const n=document.getElementById('sin-'+e),a=document.getElementById('sin-a-'+e);if(n&&a&&n.textContent!==''){const t=e+phaseA,n=((t%360)+360)%360;let s='';let l=!1;for(const o in sinValuesMap){const t=parseInt(o,10);if(Math.abs(t-n)<.001){s=sinValuesMap[o],l=!0;break}}l||(s=Math.sin(t*Math.PI/180).toFixed(3)),a.textContent=s}else a&&(a.textContent='')})}
+        function updateSinThetaPlusATable(){document.querySelectorAll('th[data-angle]').forEach(t=>{const e=parseInt(t.dataset.angle);if(isNaN(e))return;const n=document.getElementById('sin-'+e),a=document.getElementById('sin-a-'+e);if(n&&a&&n.innerHTML!==''){const t_angle=e+phaseA,n_angle=((t_angle%360)+360)%360;let s='';let l=!1;for(const o in sinValuesMap){const t_map=parseInt(o,10);if(Math.abs(t_map-n_angle)<.001){s=sinValuesMap[o],l=!0;break}}l||(s=Math.sin(t_angle*Math.PI/180).toFixed(3)),a.innerHTML=formatFraction(s)}else a&&(a.innerHTML='')})}
         
         function updateSinBThetaTable() {
             document.querySelectorAll('th[data-angle]').forEach(th => {
@@ -330,7 +473,7 @@
                 if (isNaN(angleDeg)) return;
                 const baseSinTd = document.getElementById('sin-' + angleDeg);
                 const targetTd = document.getElementById('sin-b-' + angleDeg);
-                if (baseSinTd && targetTd && baseSinTd.textContent !== '') {
+                if (baseSinTd && targetTd && baseSinTd.innerHTML !== '') {
                     const totalAngle = angleDeg * frequencyB;
                     const normalizedAngle = ((totalAngle % 360) + 360) % 360;
                     let displayValue = ''; let foundExact = false;
@@ -342,9 +485,9 @@
                         }
                     }
                     if (!foundExact) displayValue = Math.sin(totalAngle * Math.PI / 180).toFixed(3);
-                    targetTd.textContent = displayValue;
+                    targetTd.innerHTML = formatFraction(displayValue);
                 } else if (targetTd) {
-                    targetTd.textContent = '';
+                    targetTd.innerHTML = '';
                 }
             });
         }
@@ -355,7 +498,7 @@
                 if (isNaN(angleDeg)) return;
                 const baseSinTd = document.getElementById('sin-' + angleDeg);
                 const targetTd = document.getElementById('sin-cd-' + angleDeg);
-                if (baseSinTd && targetTd && baseSinTd.textContent !== '') {
+                if (baseSinTd && targetTd && baseSinTd.innerHTML !== '') {
                     const totalAngle = (angleDeg * frequencyC) + phaseD;
                     const normalizedAngle = ((totalAngle % 360) + 360) % 360;
                     let displayValue = ''; let foundExact = false;
@@ -367,9 +510,9 @@
                         }
                     }
                     if (!foundExact) displayValue = Math.sin(totalAngle * Math.PI / 180).toFixed(3);
-                    targetTd.textContent = displayValue;
+                    targetTd.innerHTML = formatFraction(displayValue);
                 } else if (targetTd) {
-                    targetTd.textContent = '';
+                    targetTd.innerHTML = '';
                 }
             });
         }
@@ -390,7 +533,7 @@
         resetAnimationBtn.addEventListener('click', () => { angle = 0; drawFrame(); });
         resetPointsBtn.addEventListener('click', () => { 
             clickedPoints = []; 
-            document.querySelectorAll('.sin-value, .sin-value-a, .sin-value-b, .sin-value-cd').forEach(c=>c.textContent='');
+            document.querySelectorAll('.sin-value, .sin-value-a, .sin-value-b, .sin-value-cd').forEach(c=>c.innerHTML='');
             updateAllTables(); 
             drawFrame();
         });
@@ -419,11 +562,13 @@
         });
         
         document.querySelectorAll('th[data-angle]').forEach(th => {
-            th.addEventListener('click', event => {
-                const a = parseInt(event.target.dataset.angle); if (isNaN(a)) return;
+            th.addEventListener('click', () => {
+                const a = parseInt(th.dataset.angle); 
+                if (isNaN(a)) return;
+
                 const s = sinValuesMap[a];
                 const c = document.getElementById('sin-' + a);
-                if (c && s !== undefined) c.textContent = s;
+                if (c && s !== undefined) c.innerHTML = formatFraction(s);
                 if (!clickedPoints.includes(a)) clickedPoints.push(a);
                 updateAllTables();
                 drawFrame();
