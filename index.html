@@ -78,9 +78,6 @@
         th[data-angle]:hover { background-color: #e9e9e9; }
         
         .sin-value { color: #1c7ed6; font-weight: bold; font-size: 16px; }
-        .sin-value-a { color: #f76707; font-weight: bold; font-size: 16px; }
-        .sin-value-b { color: #37b24d; font-weight: bold; font-size: 16px; }
-        .sin-value-cd { color: #845ef7; font-weight: bold; font-size: 16px; }
 
         .sin-theta-color { color: #1c7ed6; }
         .sin-theta-plus-a-color { color: #f76707; }
@@ -187,18 +184,6 @@
                     <td><var>sin(θ)</var></td>
                     <td id="sin-0" class="sin-value"></td> <td id="sin-30" class="sin-value"></td> <td id="sin-45" class="sin-value"></td> <td id="sin-60" class="sin-value"></td> <td id="sin-90" class="sin-value"></td> <td id="sin-120" class="sin-value"></td> <td id="sin-135" class="sin-value"></td> <td id="sin-150" class="sin-value"></td> <td id="sin-180" class="sin-value"></td> <td id="sin-210" class="sin-value"></td> <td id="sin-225" class="sin-value"></td> <td id="sin-240" class="sin-value"></td> <td id="sin-270" class="sin-value"></td> <td id="sin-300" class="sin-value"></td> <td id="sin-315" class="sin-value"></td> <td id="sin-330" class="sin-value"></td> <td id="sin-360" class="sin-value"></td>
                 </tr>
-                <tr id="rowSinThetaPlusA">
-                    <td><var>sin(θ+a)</var></td>
-                    <td id="sin-a-0" class="sin-value-a"></td> <td id="sin-a-30" class="sin-value-a"></td> <td id="sin-a-45" class="sin-value-a"></td> <td id="sin-a-60" class="sin-value-a"></td> <td id="sin-a-90" class="sin-value-a"></td> <td id="sin-a-120" class="sin-value-a"></td> <td id="sin-a-135" class="sin-value-a"></td> <td id="sin-a-150" class="sin-value-a"></td> <td id="sin-a-180" class="sin-value-a"></td> <td id="sin-a-210" class="sin-value-a"></td> <td id="sin-a-225" class="sin-value-a"></td> <td id="sin-a-240" class="sin-value-a"></td> <td id="sin-a-270" class="sin-value-a"></td> <td id="sin-a-300" class="sin-value-a"></td> <td id="sin-a-315" class="sin-value-a"></td> <td id="sin-a-330" class="sin-value-a"></td> <td id="sin-a-360" class="sin-value-a"></td>
-                </tr>
-                <tr id="rowSinBTheta">
-                    <td><var>sin(bθ)</var></td>
-                    <td id="sin-b-0" class="sin-value-b"></td> <td id="sin-b-30" class="sin-value-b"></td> <td id="sin-b-45" class="sin-value-b"></td> <td id="sin-b-60" class="sin-value-b"></td> <td id="sin-b-90" class="sin-value-b"></td> <td id="sin-b-120" class="sin-value-b"></td> <td id="sin-b-135" class="sin-value-b"></td> <td id="sin-b-150" class="sin-value-b"></td> <td id="sin-b-180" class="sin-value-b"></td> <td id="sin-b-210" class="sin-value-b"></td> <td id="sin-b-225" class="sin-value-b"></td> <td id="sin-b-240" class="sin-value-b"></td> <td id="sin-b-270" class="sin-value-b"></td> <td id="sin-b-300" class="sin-value-b"></td> <td id="sin-b-315" class="sin-value-b"></td> <td id="sin-b-330" class="sin-value-b"></td> <td id="sin-b-360" class="sin-value-b"></td>
-                </tr>
-                <tr id="rowSinCThetaPlusD">
-                    <td><var>sin(cθ+d)</var></td>
-                    <td id="sin-cd-0" class="sin-value-cd"></td> <td id="sin-cd-30" class="sin-value-cd"></td> <td id="sin-cd-45" class="sin-value-cd"></td> <td id="sin-cd-60" class="sin-value-cd"></td> <td id="sin-cd-90" class="sin-value-cd"></td> <td id="sin-cd-120" class="sin-value-cd"></td> <td id="sin-cd-135" class="sin-value-cd"></td> <td id="sin-cd-150" class="sin-value-cd"></td> <td id="sin-cd-180" class="sin-value-cd"></td> <td id="sin-cd-210" class="sin-value-cd"></td> <td id="sin-cd-225" class="sin-value-cd"></td> <td id="sin-cd-240" class="sin-value-cd"></td> <td id="sin-cd-270" class="sin-value-cd"></td> <td id="sin-cd-300" class="sin-value-cd"></td> <td id="sin-cd-315" class="sin-value-cd"></td> <td id="sin-cd-330" class="sin-value-cd"></td> <td id="sin-cd-360" class="sin-value-cd"></td>
-                </tr>
             </tbody>
         </table>
     </div>
@@ -222,9 +207,6 @@
         const toggleSinCThetaPlusD = document.getElementById('toggleSinCThetaPlusD');
         
         const rowSinTheta = document.getElementById('rowSinTheta');
-        const rowSinThetaPlusA = document.getElementById('rowSinThetaPlusA');
-        const rowSinBTheta = document.getElementById('rowSinBTheta');
-        const rowSinCThetaPlusD = document.getElementById('rowSinCThetaPlusD');
 
         // --- 定数・変数定義 ---
         const canvasWidth = canvas.width, canvasHeight = canvas.height;
@@ -246,24 +228,56 @@
         function drawFrame() {
             ctx.clearRect(0,0,canvasWidth,canvasHeight);
             drawBackground();
+            const drawnSignatures = new Set();
+            const labelsToDraw = new Map();
+
+            const mergeLabels = (newLabels, color, yOffset) => {
+                for (const [x, text] of newLabels.entries()) {
+                    if (!labelsToDraw.has(x)) {
+                        labelsToDraw.set(x, { text, color, yOffset });
+                    }
+                }
+            };
             
-            if(show.sinTheta) {
+            if (show.sinTheta) {
+                const signature = `p:0,f:1`;
                 drawSinCurve('#1c7ed6', 0, 1, angle);
                 drawAnimatedPoints('#1c7ed6', 0, 1);
+                mergeLabels(calculateZeroCrossings('0', '1'), '#1c7ed6', 20);
+                drawnSignatures.add(signature);
             }
-            if(show.sinThetaPlusA) {
-                drawSinCurve('#f76707', phaseA, 1, angle);
-                drawAnimatedPoints('#f76707', phaseA, 1);
+
+            if (show.sinThetaPlusA) {
+                const signature = `p:${phaseA},f:1`;
+                if (!drawnSignatures.has(signature)) {
+                    drawSinCurve('#f76707', phaseA, 1, angle);
+                    drawAnimatedPoints('#f76707', phaseA, 1);
+                    mergeLabels(calculateZeroCrossings(phaseInput.value, '1'), '#f76707', 35);
+                    drawnSignatures.add(signature);
+                }
             }
-            if(show.sinBTheta) {
-                drawSinCurve('#37b24d', 0, frequencyB, angle);
-                drawAnimatedPoints('#37b24d', 0, frequencyB);
-            }
-            if(show.sinCThetaPlusD) {
-                drawSinCurve('#845ef7', phaseD, frequencyC, angle);
-                drawAnimatedPoints('#845ef7', phaseD, frequencyC);
+
+            if (show.sinBTheta) {
+                const signature = `p:0,f:${frequencyB}`;
+                if (!drawnSignatures.has(signature)) {
+                    drawSinCurve('#37b24d', 0, frequencyB, angle);
+                    drawAnimatedPoints('#37b24d', 0, frequencyB);
+                    mergeLabels(calculateZeroCrossings('0', freqInput.value), '#37b24d', 50);
+                    drawnSignatures.add(signature);
+                }
             }
             
+            if (show.sinCThetaPlusD) {
+                const signature = `p:${phaseD},f:${frequencyC}`;
+                if (!drawnSignatures.has(signature)) {
+                    drawSinCurve('#845ef7', phaseD, frequencyC, angle);
+                    drawAnimatedPoints('#845ef7', phaseD, frequencyC);
+                    mergeLabels(calculateZeroCrossings(phaseDInput.value, freqCInput.value), '#845ef7', 65);
+                    drawnSignatures.add(signature);
+                }
+            }
+            
+            drawAllLabels(labelsToDraw);
             clickedPoints.forEach(p=>drawStaticPoint(p));
         }
         
@@ -279,18 +293,15 @@
 
             ctx.lineWidth = 1.5;
 
-            // --- 単位円 (Unit Circle) ---
             ctx.save();
             ctx.translate(circleCenterX, circleCenterY);
             
             ctx.strokeStyle = axisColor;
-            // Y-Axis
             ctx.beginPath();
             ctx.moveTo(0, radius + 20); ctx.lineTo(0, -radius - 20);
             ctx.moveTo(0, -radius - 20); ctx.lineTo(-arrowheadSize / 2, -radius - 20 + arrowheadSize);
             ctx.moveTo(0, -radius - 20); ctx.lineTo(arrowheadSize / 2, -radius - 20 + arrowheadSize);
             ctx.stroke();
-            // X-Axis
             ctx.beginPath();
             ctx.moveTo(-radius - 20, 0); ctx.lineTo(radius + 20, 0);
             ctx.moveTo(radius + 20, 0); ctx.lineTo(radius + 20 - arrowheadSize, -arrowheadSize / 2);
@@ -304,57 +315,34 @@
             ctx.stroke();
             ctx.lineWidth = 1.5;
 
-            // ★★★★★ 目盛りラベル(1, -1, 0)の位置を再調整 ★★★★★
             ctx.fillStyle = labelColor;
             ctx.font = labelFont;
-            
-            // Right '1'
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'top';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'top';
             ctx.fillText('1', 90, 8);
-
-            // Left '-1'
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'top';
             ctx.fillText('-1', -90, 8);
-
-            // Top '1'
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'middle';
+            ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
             ctx.fillText('1', 8, -90);
-
-            // Bottom '-1'
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'middle';
             ctx.fillText('-1', 8, 90);
-            
-            // Origin '0'
-            ctx.textAlign = 'right';
-            ctx.textBaseline = 'top';
+            ctx.textAlign = 'right'; ctx.textBaseline = 'top';
             ctx.fillText('0', -5, 5);
 
-            // ★★★★★ 軸ラベル(x, y)を矢印のさらに外側に配置 ★★★★★
             ctx.fillStyle = axisLabelColor;
             ctx.font = axisLabelFont;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
             ctx.fillText('y', 0, -radius - 28);
             ctx.fillText('x', radius + 28, 0);
             
             ctx.restore();
 
-            // --- グラフエリア (Graph Area) ---
             ctx.save();
             ctx.translate(graphStartX, graphY);
 
             ctx.strokeStyle = axisColor;
-            // Y-Axis
             ctx.beginPath();
             ctx.moveTo(0, radius * 1.5); ctx.lineTo(0, -radius * 1.5);
             ctx.moveTo(0, -radius * 1.5); ctx.lineTo(-arrowheadSize / 2, -radius * 1.5 + arrowheadSize);
             ctx.moveTo(0, -radius * 1.5); ctx.lineTo(arrowheadSize / 2, -radius * 1.5 + arrowheadSize);
             ctx.stroke();
-            // X-Axis (θ)
             ctx.beginPath();
             ctx.moveTo(0, 0); ctx.lineTo(720 + 20, 0);
             ctx.moveTo(720 + 20, 0); ctx.lineTo(720 + 20 - arrowheadSize, -arrowheadSize / 2);
@@ -363,6 +351,16 @@
 
             ctx.strokeStyle = gridColor;
             ctx.lineWidth = 1;
+
+            ctx.beginPath();
+            ctx.setLineDash([4, 4]);
+            ctx.moveTo(0, -radius);
+            ctx.lineTo(720, -radius);
+            ctx.moveTo(0, radius);
+            ctx.lineTo(720, radius);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
             ctx.fillStyle = labelColor;
             ctx.font = labelFont;
             ctx.textAlign = 'right';
@@ -372,24 +370,6 @@
             ctx.fillText('-1', -8, radius);
             ctx.beginPath(); ctx.moveTo(-4, radius); ctx.lineTo(4, radius); ctx.stroke();
             
-            ctx.font = smallLabelFont;
-            for (let i = 0; i <= 720; i += 90) {
-                const labels = {0:'0', 90:'π/2', 180:'π', 270:'3π/2', 360:'2π', 450:'5π/2', 540:'3π', 630:'7π/2', 720:'4π'};
-                const text = labels[i];
-                if (text) {
-                    if (i === 0) {
-                        ctx.textAlign = 'right';
-                        ctx.textBaseline = 'top';
-                        ctx.fillText('0', -5, 5);
-                    } else {
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'top';
-                        ctx.fillText(text, i, 15);
-                    }
-                }
-            }
-            
-            // ★★★★★ 軸ラベル(θ, y)を矢印のさらに外側に配置 ★★★★★
             ctx.fillStyle = axisLabelColor;
             ctx.font = axisLabelFont;
             ctx.textAlign = 'center';
@@ -427,15 +407,163 @@
         function drawStaticPoint(a){
             ctx.save();
             ctx.translate(graphStartX,graphY);
-            if(show.sinTheta){const y1=-radius*Math.sin(a*Math.PI/180);ctx.fillStyle='#1c7ed6';ctx.beginPath();ctx.arc(a,y1,4,0,2*Math.PI);ctx.fill();}
-            if(show.sinThetaPlusA){const y2=-radius*Math.sin((a+phaseA)*Math.PI/180);ctx.fillStyle='#f76707';ctx.beginPath();ctx.arc(a,y2,4,0,2*Math.PI);ctx.fill();}
-            if(show.sinBTheta){const y3=-radius*Math.sin((a*frequencyB)*Math.PI/180);ctx.fillStyle='#37b24d';ctx.beginPath();ctx.arc(a,y3,4,0,2*Math.PI);ctx.fill();}
-            if(show.sinCThetaPlusD){const y4=-radius*Math.sin(((a*frequencyC)+phaseD)*Math.PI/180);ctx.fillStyle='#845ef7';ctx.beginPath();ctx.arc(a,y4,4,0,2*Math.PI);ctx.fill();}
+            if(show.sinTheta){
+                const y1=-radius*Math.sin(a*Math.PI/180);
+                ctx.fillStyle='#1c7ed6';
+                ctx.beginPath();
+                ctx.arc(a,y1,4,0,2*Math.PI);
+                ctx.fill();
+            }
             ctx.restore();
         }
         
-        // --- 制御・計算関数 ---
-        function animate(){angle=(angle+1)%721;drawFrame();animationId=requestAnimationFrame(animate)}
+        // --- 制御・計算・ユーティリティ関数 ---
+
+        function gcd(a, b) {
+            return b === 0 ? a : gcd(b, a % b);
+        }
+
+        function parseFraction(str) {
+            str = String(str).trim();
+            if (str === '') return { num: 0, den: 1 };
+            if (str.includes('/')) {
+                const parts = str.split('/');
+                if (parts.length !== 2) return { num: 0, den: 1 };
+                const num = parseInt(parts[0], 10);
+                const den = parseInt(parts[1], 10);
+                if (isNaN(num) || isNaN(den) || den === 0) return { num: 0, den: 1 };
+                return { num, den };
+            } else {
+                const num = parseFloat(str);
+                if (isNaN(num)) return { num: 0, den: 1 };
+                if (num % 1 !== 0) {
+                    let den = 1;
+                    while ((num * den) % 1 !== 0 && den < 10000) { den *= 10; }
+                    return { num: num * den, den: den };
+                }
+                return { num, den: 1 };
+            }
+        }
+        
+        function formatPiLabel(num, den) {
+            if (num === 0) return "0";
+            const common = gcd(Math.abs(num), Math.abs(den));
+            const n = num / common;
+            const d = den / common;
+            
+            if (d === 1) {
+                if (n === 1) return "π";
+                if (n === -1) return "-π";
+                return `${n}π`;
+            }
+            if (n === 1) return `π/${d}`;
+            if (n === -1) return `-π/${d}`;
+            return `${n}π/${d}`;
+        }
+        
+        function calculateZeroCrossings(phaseStr, freqStr) {
+            const labels = new Map();
+            const phaseFrac = parseFraction(phaseStr);
+            const freqFrac = parseFraction(freqStr);
+
+            if (freqFrac.num === 0) return labels;
+
+            const phaseDeg = (phaseFrac.num / phaseFrac.den) * 180;
+            const freqVal = freqFrac.num / freqFrac.den;
+            
+            for (let n = -20; n <= 40; n++) {
+                const x_deg = (180 * n - phaseDeg) / freqVal;
+
+                if (x_deg > 1 && x_deg <= 720) {
+                    const labelNum = (n * phaseFrac.den - phaseFrac.num) * freqFrac.den;
+                    const labelDen = phaseFrac.den * freqFrac.num;
+                    const labelText = formatPiLabel(labelNum, labelDen);
+                    
+                    const rounded_x = Math.round(x_deg);
+                    if (!labels.has(rounded_x)) {
+                        labels.set(rounded_x, labelText);
+                    }
+                }
+            }
+            return labels;
+        }
+        
+        function drawAllLabels(labelsToDraw) {
+            ctx.save();
+            ctx.translate(graphStartX, graphY);
+            ctx.textAlign = 'center';
+
+            for (const [x, label] of labelsToDraw.entries()) {
+                ctx.fillStyle = label.color;
+                ctx.strokeStyle = label.color;
+                ctx.lineWidth = 1;
+                
+                const labelText = label.text;
+                const yPos = label.yOffset;
+
+                // ラベルテキストの描画
+                if (labelText.includes('/') && labelText.length > 1) {
+                    const [numerator, denominator] = labelText.split('/');
+                    ctx.font = 'italic 12px "Times New Roman"';
+                    ctx.textBaseline = 'middle';
+
+                    const numWidth = ctx.measureText(numerator).width;
+                    const denWidth = ctx.measureText(denominator).width;
+                    const barWidth = Math.max(numWidth, denWidth, 10);
+                    
+                    const numeratorY = yPos + 6;
+                    const barY = yPos + 13;
+                    const denominatorY = yPos + 20;
+
+                    ctx.fillText(numerator, x, numeratorY);
+                    
+                    // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+                    //  ここが修正点です: 分数の横線を描画する直前に、線のスタイルを実線に戻します。
+                    // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+                    ctx.beginPath();
+                    ctx.setLineDash([]); // ★実線に設定
+                    ctx.moveTo(x - barWidth / 2, barY);
+                    ctx.lineTo(x + barWidth / 2, barY);
+                    ctx.stroke();
+
+                    ctx.fillText(denominator, x, denominatorY);
+
+                } else {
+                    ctx.font = 'italic 14px "Times New Roman"';
+                    ctx.textBaseline = 'top';
+                    ctx.fillText(labelText, x, yPos);
+                }
+
+                // x軸上の目盛りを描画
+                ctx.beginPath();
+                ctx.moveTo(x, -4);
+                ctx.lineTo(x, 4);
+                ctx.setLineDash([]);
+                ctx.stroke();
+
+                // x軸からラベルへの点線を描画
+                ctx.beginPath();
+                ctx.setLineDash([2, 3]);
+                ctx.moveTo(x, 4);
+                ctx.lineTo(x, yPos);
+                ctx.stroke();
+            }
+            
+            ctx.setLineDash([]);
+            ctx.restore();
+        }
+
+        function animate(){
+            angle++;
+            drawFrame();
+
+            if (angle >= 720) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+                return;
+            }
+            animationId = requestAnimationFrame(animate);
+        }
         
         function formatFraction(valueStr) {
             if (typeof valueStr !== 'string' || !valueStr.includes('/')) {
@@ -458,64 +586,6 @@
                 </span>`;
             return `<span class="fraction-container">${prefix}${fractionHTML}</span>`;
         }
-
-        function updateAllTables() {
-            updateSinThetaPlusATable();
-            updateSinBThetaTable();
-            updateSinCThetaPlusDTable();
-        }
-        
-        function updateSinThetaPlusATable(){document.querySelectorAll('th[data-angle]').forEach(t=>{const e=parseInt(t.dataset.angle);if(isNaN(e))return;const n=document.getElementById('sin-'+e),a=document.getElementById('sin-a-'+e);if(n&&a&&n.innerHTML!==''){const t_angle=e+phaseA,n_angle=((t_angle%360)+360)%360;let s='';let l=!1;for(const o in sinValuesMap){const t_map=parseInt(o,10);if(Math.abs(t_map-n_angle)<.001){s=sinValuesMap[o],l=!0;break}}l||(s=Math.sin(t_angle*Math.PI/180).toFixed(3)),a.innerHTML=formatFraction(s)}else a&&(a.innerHTML='')})}
-        
-        function updateSinBThetaTable() {
-            document.querySelectorAll('th[data-angle]').forEach(th => {
-                const angleDeg = parseInt(th.dataset.angle);
-                if (isNaN(angleDeg)) return;
-                const baseSinTd = document.getElementById('sin-' + angleDeg);
-                const targetTd = document.getElementById('sin-b-' + angleDeg);
-                if (baseSinTd && targetTd && baseSinTd.innerHTML !== '') {
-                    const totalAngle = angleDeg * frequencyB;
-                    const normalizedAngle = ((totalAngle % 360) + 360) % 360;
-                    let displayValue = ''; let foundExact = false;
-                    for (const key in sinValuesMap) {
-                        if (Math.abs(parseInt(key, 10) - normalizedAngle) < 0.001) {
-                            displayValue = sinValuesMap[key];
-                            foundExact = true;
-                            break;
-                        }
-                    }
-                    if (!foundExact) displayValue = Math.sin(totalAngle * Math.PI / 180).toFixed(3);
-                    targetTd.innerHTML = formatFraction(displayValue);
-                } else if (targetTd) {
-                    targetTd.innerHTML = '';
-                }
-            });
-        }
-        
-        function updateSinCThetaPlusDTable() {
-            document.querySelectorAll('th[data-angle]').forEach(th => {
-                const angleDeg = parseInt(th.dataset.angle);
-                if (isNaN(angleDeg)) return;
-                const baseSinTd = document.getElementById('sin-' + angleDeg);
-                const targetTd = document.getElementById('sin-cd-' + angleDeg);
-                if (baseSinTd && targetTd && baseSinTd.innerHTML !== '') {
-                    const totalAngle = (angleDeg * frequencyC) + phaseD;
-                    const normalizedAngle = ((totalAngle % 360) + 360) % 360;
-                    let displayValue = ''; let foundExact = false;
-                    for (const key in sinValuesMap) {
-                        if (Math.abs(parseInt(key, 10) - normalizedAngle) < 0.001) {
-                            displayValue = sinValuesMap[key];
-                            foundExact = true;
-                            break;
-                        }
-                    }
-                    if (!foundExact) displayValue = Math.sin(totalAngle * Math.PI / 180).toFixed(3);
-                    targetTd.innerHTML = formatFraction(displayValue);
-                } else if (targetTd) {
-                    targetTd.innerHTML = '';
-                }
-            });
-        }
         
         function parseCoefficient(str) {
             str = str.trim(); if (str === '') return NaN;
@@ -528,36 +598,48 @@
         }
 
         // --- イベントリスナー ---
-        playBtn.addEventListener('click', () => { if (animationId === null) animate(); });
-        stopBtn.addEventListener('click', () => { if (animationId !== null) { cancelAnimationFrame(animationId); animationId = null; } });
-        resetAnimationBtn.addEventListener('click', () => { angle = 0; drawFrame(); });
+        playBtn.addEventListener('click', () => { 
+            if (animationId === null && angle < 720) {
+                animate();
+            }
+        });
+        stopBtn.addEventListener('click', () => { 
+            if (animationId !== null) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+        });
+        resetAnimationBtn.addEventListener('click', () => { 
+            angle = 0;
+            if (animationId !== null) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            drawFrame(); 
+        });
         resetPointsBtn.addEventListener('click', () => { 
             clickedPoints = []; 
-            document.querySelectorAll('.sin-value, .sin-value-a, .sin-value-b, .sin-value-cd').forEach(c=>c.innerHTML='');
-            updateAllTables(); 
+            document.querySelectorAll('.sin-value').forEach(c=>c.innerHTML='');
             drawFrame();
         });
 
         phaseInput.addEventListener('input', () => {
             const val = parseCoefficient(phaseInput.value); phaseA = !isNaN(val) ? val * 180 : 0;
-            updateSinThetaPlusATable(); drawFrame();
+            drawFrame();
         });
 
         freqInput.addEventListener('input', () => {
             const val = parseCoefficient(freqInput.value); frequencyB = !isNaN(val) && val > 0 ? val : 1;
-            updateSinBThetaTable();
             drawFrame();
         });
 
         freqCInput.addEventListener('input', () => {
             const val = parseCoefficient(freqCInput.value); frequencyC = !isNaN(val) && val > 0 ? val : 1;
-            updateSinCThetaPlusDTable();
             drawFrame();
         });
 
         phaseDInput.addEventListener('input', () => {
             const val = parseCoefficient(phaseDInput.value); phaseD = !isNaN(val) ? val * 180 : 0;
-            updateSinCThetaPlusDTable();
             drawFrame();
         });
         
@@ -570,7 +652,6 @@
                 const c = document.getElementById('sin-' + a);
                 if (c && s !== undefined) c.innerHTML = formatFraction(s);
                 if (!clickedPoints.includes(a)) clickedPoints.push(a);
-                updateAllTables();
                 drawFrame();
             });
         });
@@ -582,17 +663,14 @@
         });
         toggleSinThetaPlusA.addEventListener('change', (e) => {
             show.sinThetaPlusA = e.target.checked;
-            rowSinThetaPlusA.style.display = e.target.checked ? '' : 'none';
             drawFrame();
         });
         toggleSinBTheta.addEventListener('change', (e) => {
             show.sinBTheta = e.target.checked;
-            rowSinBTheta.style.display = e.target.checked ? '' : 'none';
             drawFrame();
         });
         toggleSinCThetaPlusD.addEventListener('change', (e) => {
             show.sinCThetaPlusD = e.target.checked;
-            rowSinCThetaPlusD.style.display = e.target.checked ? '' : 'none';
             drawFrame();
         });
 
