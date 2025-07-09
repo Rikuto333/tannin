@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>単位円とsinグラフ（最終版）</title>
+    <title>単位円とsinグラフ（全操作版）</title>
     <style>
         body {
             font-family: sans-serif, 'Times New Roman', serif;
@@ -15,8 +15,29 @@
             font-style: italic;
             font-family: 'Times New Roman', serif;
         }
-        canvas { border: 1px solid #ccc; display: block; margin: 10px auto; }
+        canvas { border: 1px solid #ccc; display: block; }
         .controls button { font-size: 14px; padding: 8px 12px; margin: 5px; cursor: pointer; }
+
+        /* --- New/Modified Styles --- */
+        .canvas-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 10px auto;
+        }
+        #toggle-buttons-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-right: 20px;
+        }
+        #toggle-buttons-panel button {
+            font-size: 14px;
+            padding: 8px 12px;
+            cursor: pointer;
+            width: 80px;
+        }
+        /* --- End New/Modified Styles --- */
         
         .control-panel {
             display: inline-flex;
@@ -42,10 +63,18 @@
             align-items: center;
             padding: 8px 5px;
             border-bottom: 1px solid #eee;
+            min-height: 40px; /* 非表示時も高さを維持 */
         }
         .control-row:last-child {
             border-bottom: none;
         }
+
+        .collapsible-controls {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
         .control-row .graph-label {
             width: 240px;
             font-weight: bold;
@@ -59,6 +88,8 @@
         .control-row .input-group {
             margin-left: 15px;
             font-size: 16px;
+            display: inline-flex;
+            align-items: center;
         }
         .control-row .input-group label {
             font-weight: bold;
@@ -70,7 +101,7 @@
             text-align: center;
             vertical-align: middle;
         }
-
+        
         .table-container { margin: 20px auto; overflow-x: auto; }
         table { border-collapse: collapse; margin: 0 auto; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: center; min-width: 55px; vertical-align: middle; }
@@ -85,31 +116,23 @@
         .sin-c-theta-plus-d-color { color: #845ef7; }
 
         /* --- 分数表示のためのCSS --- */
-        .fraction-container {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .fraction-container > span:first-child {
-            padding-right: 0.15em;
-        }
-        .fraction {
-            display: inline-flex;
-            flex-direction: column;
-            text-align: center;
-            vertical-align: middle;
-        }
-        .numerator {
-            border-bottom: 1.5px solid currentColor;
-            padding: 0 0.2em;
-        }
-        .denominator {
-            padding: 0 0.2em;
-        }
+        .fraction-container { display: inline-flex; align-items: center; justify-content: center; }
+        .fraction-container > span:first-child { padding-right: 0.15em; }
+        .fraction { display: inline-flex; flex-direction: column; text-align: center; vertical-align: middle; }
+        .numerator { border-bottom: 1.5px solid currentColor; padding: 0 0.2em; }
+        .denominator { padding: 0 0.2em; }
     </style>
 </head>
 <body>
-    <canvas id="myCanvas" width="1200" height="400"></canvas>
+    <div class="canvas-wrapper">
+        <div id="toggle-buttons-panel">
+            <button class="toggle-params-btn" data-target="collapsible-sinTheta">非表示</button>
+            <button class="toggle-params-btn" data-target="collapsible-sinThetaPlusA">非表示</button>
+            <button class="toggle-params-btn" data-target="collapsible-sinBTheta">非表示</button>
+            <button class="toggle-params-btn" data-target="collapsible-sinCThetaPlusD">非表示</button>
+        </div>
+        <canvas id="myCanvas" width="1200" height="400"></canvas>
+    </div>
 
     <div class="controls">
         <button id="playBtn">再生</button>
@@ -121,35 +144,43 @@
     <div class="control-panel">
         <div class="control-column">
             <div class="control-row">
-                <label class="graph-label"><input type="checkbox" id="toggleSinTheta" checked> <span class="sin-theta-color"><var>y = sin(θ)</var></span></label>
+                <div class="collapsible-controls" id="collapsible-sinTheta">
+                    <label class="graph-label"><input type="checkbox" id="toggleSinTheta" checked> <span class="sin-theta-color"><var>y = sin(θ)</var></span></label>
+                </div>
             </div>
             <div class="control-row">
-                <label class="graph-label"><input type="checkbox" id="toggleSinThetaPlusA" checked> <span class="sin-theta-plus-a-color"><var>y = sin(θ+a)</var></span></label>
-                <div class="input-group">
-                    <label for="phaseInput">位相 <var>a =</var> (</label>
-                    <input type="text" id="phaseInput" value="0" placeholder="例: 1/2">
-                    <label>) <var>× π</var></label>
+                <div class="collapsible-controls" id="collapsible-sinThetaPlusA">
+                    <label class="graph-label"><input type="checkbox" id="toggleSinThetaPlusA" checked> <span class="sin-theta-plus-a-color"><var>y = sin(θ+a)</var></span></label>
+                    <div class="input-group">
+                        <label for="phaseInput">位相 <var>a =</var> (</label>
+                        <input type="text" id="phaseInput" value="0" placeholder="例: 1/2">
+                        <label>) <var>× π</var></label>
+                    </div>
                 </div>
             </div>
         </div>
         <div class="control-column">
             <div class="control-row">
-                <label class="graph-label"><input type="checkbox" id="toggleSinBTheta" checked> <span class="sin-b-theta-color"><var>y = sin(bθ)</var></span></label>
-                <div class="input-group">
-                    <label for="freqInput">周期 <var>b =</var></label>
-                    <input type="text" id="freqInput" value="1" placeholder="例: 2">
+                <div class="collapsible-controls" id="collapsible-sinBTheta">
+                    <label class="graph-label"><input type="checkbox" id="toggleSinBTheta" checked> <span class="sin-b-theta-color"><var>y = sin(bθ)</var></span></label>
+                    <div class="input-group">
+                        <label for="freqInput">周期 <var>b =</var></label>
+                        <input type="text" id="freqInput" value="1" placeholder="例: 2">
+                    </div>
                 </div>
             </div>
             <div class="control-row">
-                <label class="graph-label"><input type="checkbox" id="toggleSinCThetaPlusD" checked> <span class="sin-c-theta-plus-d-color"><var>y = sin(cθ+d)</var></span></label>
-                <div class="input-group">
-                    <label for="freqCInput">周期 <var>c =</var></label>
-                    <input type="text" id="freqCInput" value="1" placeholder="例: 2">
-                </div>
-                <div class="input-group">
-                    <label for="phaseDInput">位相 <var>d =</var> (</label>
-                    <input type="text" id="phaseDInput" value="0" placeholder="例: 1/2">
-                    <label>) <var>× π</var></label>
+                <div class="collapsible-controls" id="collapsible-sinCThetaPlusD">
+                    <label class="graph-label"><input type="checkbox" id="toggleSinCThetaPlusD" checked> <span class="sin-c-theta-plus-d-color"><var>y = sin(cθ+d)</var></span></label>
+                    <div class="input-group">
+                        <label for="freqCInput">周期 <var>c =</var></label>
+                        <input type="text" id="freqCInput" value="1" placeholder="例: 2">
+                    </div>
+                    <div class="input-group">
+                        <label for="phaseDInput">位相 <var>d =</var> (</label>
+                        <input type="text" id="phaseDInput" value="0" placeholder="例: 1/2">
+                        <label>) <var>× π</var></label>
+                    </div>
                 </div>
             </div>
         </div>
@@ -207,7 +238,7 @@
         const toggleSinCThetaPlusD = document.getElementById('toggleSinCThetaPlusD');
         
         const rowSinTheta = document.getElementById('rowSinTheta');
-
+        
         // --- 定数・変数定義 ---
         const canvasWidth = canvas.width, canvasHeight = canvas.height;
         const circleCenterX = 180, circleCenterY = 200, radius = 80;
@@ -272,7 +303,7 @@
                 if (!drawnSignatures.has(signature)) {
                     drawSinCurve('#845ef7', phaseD, frequencyC, angle);
                     drawAnimatedPoints('#845ef7', phaseD, frequencyC);
-                    mergeLabels(calculateZeroCrossings(phaseDInput.value, freqCInput.value), '#845ef7', 65);
+                    mergeLabels(calculateZeroCrossings(phaseDInput.value, freqCInput.value), '#845ef7', 85);
                     drawnSignatures.add(signature);
                 }
             }
@@ -517,11 +548,8 @@
 
                     ctx.fillText(numerator, x, numeratorY);
                     
-                    // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
-                    //  ここが修正点です: 分数の横線を描画する直前に、線のスタイルを実線に戻します。
-                    // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
                     ctx.beginPath();
-                    ctx.setLineDash([]); // ★実線に設定
+                    ctx.setLineDash([]); 
                     ctx.moveTo(x - barWidth / 2, barY);
                     ctx.lineTo(x + barWidth / 2, barY);
                     ctx.stroke();
@@ -623,6 +651,29 @@
             drawFrame();
         });
 
+        // --- MODIFIED EVENT LISTENER ---
+        // 全コントロール表示／非表示ボタンのイベントリスナー
+        document.querySelectorAll('.toggle-params-btn').forEach(button => {
+            button.addEventListener('click', (event) => {
+                const btn = event.currentTarget;
+                const targetId = btn.dataset.target;
+                if (!targetId) return;
+
+                const controlsToToggle = document.getElementById(targetId);
+                if (!controlsToToggle) return;
+                
+                const isHidden = controlsToToggle.style.display === 'none';
+
+                if (isHidden) {
+                    controlsToToggle.style.display = 'flex';
+                    btn.textContent = '非表示';
+                } else {
+                    controlsToToggle.style.display = 'none';
+                    btn.textContent = '表示';
+                }
+            });
+        });
+
         phaseInput.addEventListener('input', () => {
             const val = parseCoefficient(phaseInput.value); phaseA = !isNaN(val) ? val * 180 : 0;
             drawFrame();
@@ -658,7 +709,6 @@
         
         toggleSinTheta.addEventListener('change', (e) => {
             show.sinTheta = e.target.checked;
-            rowSinTheta.style.display = e.target.checked ? '' : 'none';
             drawFrame();
         });
         toggleSinThetaPlusA.addEventListener('change', (e) => {
