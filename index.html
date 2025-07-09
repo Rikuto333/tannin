@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>単位円とsinグラフ（全操作版）</title>
+    <title>単位円とsinグラフ（cosグラフ追加版）</title>
     <style>
         body {
             font-family: sans-serif, 'Times New Roman', serif;
@@ -16,7 +16,10 @@
             font-family: 'Times New Roman', serif;
         }
         canvas { border: 1px solid #ccc; display: block; }
-        .controls button { font-size: 14px; padding: 8px 12px; margin: 5px; cursor: pointer; }
+        .controls { display: flex; align-items: center; justify-content: center; gap: 5px; }
+        .controls button, .controls input { font-size: 14px; padding: 8px 12px; margin: 5px; cursor: pointer; }
+        .controls label { font-size: 14px; margin-left: 10px; }
+        .controls input[type="number"] { width: 60px; text-align: center; }
 
         .canvas-wrapper {
             display: flex;
@@ -30,20 +33,19 @@
             gap: 15px;
             margin-right: 20px;
         }
-        /* ★★★ ボタンのスタイルを修正 ★★★ */
         #toggle-buttons-panel button {
             font-size: 14px;
             padding: 8px 12px;
             cursor: pointer;
-            width: 80px;
-            background-color: #ffffff; /* 背景を薄いグレーに */
-            border: 1px solid #dee2e6;  /* 枠線を設定 */
-            color: #b5bcc4;           /* 文字色を調整 */
-            border-radius: 4px;        /* 角を少し丸める */
-            transition: background-color 0.2s; /* ホバー時の変化を滑らかに */
+            width: 120px; /* ★ 変更 */
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            color: #495057;
+            border-radius: 4px;
+            transition: background-color 0.2s;
         }
         #toggle-buttons-panel button:hover {
-            background-color: #e9ecef; /* マウスが乗った時に少し濃くする */
+            background-color: #e9ecef;
         }
         
         .control-panel {
@@ -70,7 +72,7 @@
             align-items: center;
             padding: 8px 5px;
             border-bottom: 1px solid #eee;
-            min-height: 40px; /* 非表示時も高さを維持 */
+            min-height: 40px;
         }
         .control-row:last-child {
             border-bottom: none;
@@ -118,6 +120,7 @@
         .sin-value { color: #1c7ed6; font-weight: bold; font-size: 16px; }
 
         .sin-theta-color { color: #1c7ed6; }
+        .cos-theta-color { color: #d6336c; }
         .sin-theta-plus-a-color { color: #f76707; }
         .sin-b-theta-color { color: #37b24d; }
         .sin-c-theta-plus-d-color { color: #845ef7; }
@@ -133,10 +136,25 @@
 <body>
     <div class="canvas-wrapper">
         <div id="toggle-buttons-panel">
-            <button class="toggle-params-btn" data-target="collapsible-sinTheta">非表示</button>
-            <button class="toggle-params-btn" data-target="collapsible-sinThetaPlusA">非表示</button>
-            <button class="toggle-params-btn" data-target="collapsible-sinBTheta">非表示</button>
-            <button class="toggle-params-btn" data-target="collapsible-sinCThetaPlusD">非表示</button>
+            <button id="toggleCosGraphBtn" 
+                    data-show-text="cos 表示" 
+                    data-hide-text="cos 非表示">cos 非表示</button>
+            
+            <button class="toggle-params-btn" data-target="collapsible-sinTheta"
+                    data-show-text="sin(θ) 表示"
+                    data-hide-text="sin(θ) 非表示">sin(θ) 非表示</button>
+
+            <button class="toggle-params-btn" data-target="collapsible-sinThetaPlusA"
+                    data-show-text="sin(θ+a) 表示"
+                    data-hide-text="sin(θ+a) 非表示">sin(θ+a) 非表示</button>
+
+            <button class="toggle-params-btn" data-target="collapsible-sinBTheta"
+                    data-show-text="sin(bθ) 表示"
+                    data-hide-text="sin(bθ) 非表示">sin(bθ) 非表示</button>
+
+            <button class="toggle-params-btn" data-target="collapsible-sinCThetaPlusD"
+                    data-show-text="sin(cθ+d) 表示"
+                    data-hide-text="sin(cθ+d) 非表示">sin(cθ+d) 非表示</button>
         </div>
         <canvas id="myCanvas" width="1200" height="400"></canvas>
     </div>
@@ -239,6 +257,7 @@
         const freqCInput = document.getElementById('freqCInput');
         const phaseDInput = document.getElementById('phaseDInput');
 
+        const toggleCosGraphBtn = document.getElementById('toggleCosGraphBtn');
         const toggleSinTheta = document.getElementById('toggleSinTheta');
         const toggleSinThetaPlusA = document.getElementById('toggleSinThetaPlusA');
         const toggleSinBTheta = document.getElementById('toggleSinBTheta');
@@ -256,6 +275,7 @@
         let frequencyC = 1, phaseD = 0;
 
         let show = {
+            cosTheta: true,
             sinTheta: true,
             sinThetaPlusA: true,
             sinBTheta: true,
@@ -276,6 +296,10 @@
                     }
                 }
             };
+
+            if (show.cosTheta) {
+                drawCosCurve('#d6336c');
+            }
             
             if (show.sinTheta) {
                 const signature = `p:0,f:1`;
@@ -428,6 +452,25 @@
             ctx.stroke(); ctx.restore();
         }
 
+        function drawCosCurve(color) {
+            ctx.save(); 
+            
+            ctx.beginPath();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            
+            ctx.setLineDash([5, 5]);
+
+            ctx.translate(graphStartX, graphY);
+            for (let i = 0; i <= 720; i++) {
+                const y = -radius * Math.cos(i * Math.PI / 180);
+                if (i === 0) ctx.moveTo(i, y); else ctx.lineTo(i, y);
+            }
+            ctx.stroke();
+
+            ctx.restore(); 
+        }
+
         function drawAnimatedPoints(color, phase, freq) {
             const effectiveAngle = (angle * freq) + phase;
             const unitCircleAngleRad = effectiveAngle * Math.PI / 180;
@@ -539,7 +582,6 @@
                 const labelText = label.text;
                 const yPos = label.yOffset;
 
-                // ラベルテキストの描画
                 if (labelText.includes('/') && labelText.length > 1) {
                     const [numerator, denominator] = labelText.split('/');
                     ctx.font = 'italic 12px "Times New Roman"';
@@ -569,14 +611,12 @@
                     ctx.fillText(labelText, x, yPos);
                 }
 
-                // x軸上の目盛りを描画
                 ctx.beginPath();
                 ctx.moveTo(x, -4);
                 ctx.lineTo(x, 4);
                 ctx.setLineDash([]);
                 ctx.stroke();
 
-                // x軸からラベルへの点線を描画
                 ctx.beginPath();
                 ctx.setLineDash([2, 3]);
                 ctx.moveTo(x, 4);
@@ -589,7 +629,7 @@
         }
 
         function animate(){
-            angle++;
+            angle = angle + 2.5;
             drawFrame();
 
             if (angle >= 720) {
@@ -658,7 +698,15 @@
             drawFrame();
         });
 
-        // 全コントロール表示／非表示ボタンのイベントリスナー
+        // ★ 変更: cosグラフ専用ボタンのイベントリスナー
+        toggleCosGraphBtn.addEventListener('click', (event) => {
+            const btn = event.currentTarget;
+            show.cosTheta = !show.cosTheta;
+            btn.textContent = show.cosTheta ? btn.dataset.hideText : btn.dataset.showText;
+            drawFrame();
+        });
+
+        // ★ 変更: sin関数コントロール行の表示切替ボタンのリスナー
         document.querySelectorAll('.toggle-params-btn').forEach(button => {
             button.addEventListener('click', (event) => {
                 const btn = event.currentTarget;
@@ -668,14 +716,17 @@
                 const controlsToToggle = document.getElementById(targetId);
                 if (!controlsToToggle) return;
                 
-                const isHidden = controlsToToggle.style.display === 'none';
+                const rowToToggle = controlsToToggle.closest('.control-row');
+                if (!rowToToggle) return;
+                
+                const isHidden = rowToToggle.style.display === 'none';
 
                 if (isHidden) {
-                    controlsToToggle.style.display = 'flex';
-                    btn.textContent = '非表示';
+                    rowToToggle.style.display = 'flex';
+                    btn.textContent = btn.dataset.hideText;
                 } else {
-                    controlsToToggle.style.display = 'none';
-                    btn.textContent = '表示';
+                    rowToToggle.style.display = 'none';
+                    btn.textContent = btn.dataset.showText;
                 }
             });
         });
