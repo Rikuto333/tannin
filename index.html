@@ -7,11 +7,28 @@
   <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" crossorigin="anonymous"></script>
   <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+    }
+    #scale-wrapper {
+      position: absolute;
+      top: 0;
+      left: 0;
+      display: inline-block;
+      transform-origin: top left;
+    }
     #myCanvas {
       border: 1px solid #eee;
       background-color: #fafafa;
       border-radius: 4px;
-      max-width: 100%;
+      /* 16:9の比率を保ったままレスポンシブに対応 */
+      width: 100%;
+      max-width: 800px;
+      height: auto;
+      aspect-ratio: 16 / 9;
     }
     #btn_draw, #btn_domain, #btn_coord, #btn_square, #btn_maxmin {
       margin-right: 5px;
@@ -47,11 +64,12 @@
 </head>
 
 <body>
-<div class="container" style="margin-top: 30px;">
+<div id="scale-wrapper">
+<div class="container" style="margin-top: 30px; width: 1300px;">
   <div class="row">
 
-    <!-- 左半分：入力フォームと計算結果 -->
-    <div class="col-sm-6">
+    <!-- 左側：入力フォームと計算結果 -->
+    <div class="col-md-4 col-sm-12">
       <h3 class="app-title text-primary">2次関数の最大値・最小値</h3>
 
       <div style="margin-bottom: 20px;">
@@ -87,25 +105,53 @@
       </div>
     </div>
 
-    <!-- 右半分：Canvas -->
-    <div class="col-sm-6 text-center">
-      <canvas id="myCanvas" width="500" height="500"></canvas>
+    <!-- 右側：Canvas (16:9に合わせてエリアを拡大) -->
+    <div class="col-md-8 col-sm-12 text-center">
+      <!-- width 800, height 450 で 16:9 の比率に設定 -->
+      <canvas id="myCanvas" width="800" height="450"></canvas>
     </div>
 
   </div>
 </div>
+</div>
 
 <script>
+  // ==========================================
+  // 画面(アドインの表示領域)いっぱいに、配置はそのまま拡大表示する
+  // ==========================================
+  (function () {
+    var wrapper = document.getElementById('scale-wrapper');
+
+    function fitToWindow() {
+      wrapper.style.transform = 'none';
+      var baseWidth = wrapper.offsetWidth;
+      var baseHeight = wrapper.offsetHeight;
+      if (!baseWidth || !baseHeight) return;
+
+      var scale = Math.min(window.innerWidth / baseWidth, window.innerHeight / baseHeight);
+      wrapper.style.transform = 'scale(' + scale + ')';
+      wrapper.style.left = ((window.innerWidth - baseWidth * scale) / 2) + 'px';
+      wrapper.style.top = ((window.innerHeight - baseHeight * scale) / 2) + 'px';
+    }
+
+    window.addEventListener('load', fitToWindow);
+    window.addEventListener('resize', fitToWindow);
+
+    if (window.ResizeObserver) {
+      new ResizeObserver(fitToWindow).observe(wrapper);
+    }
+  })();
+
   window.addEventListener("load", init);
 
   function init() {
     var stage = new createjs.Stage("myCanvas");
 
-    var startX = 250;
-    var startY = 250;
+    var canvasWidth = document.getElementById("myCanvas").width;
+    var canvasHeight = document.getElementById("myCanvas").height;
+    var startX = canvasWidth / 2;
+    var startY = canvasHeight / 2;
     var scale = 25;
-    var max_scale_value = 10;
-    var scale_length = scale * max_scale_value;
 
     // --- 背景のグリッド描画 ---
     var horizon_back = new createjs.Shape();
@@ -116,36 +162,42 @@
     vertical_back.graphics.beginStroke("#CCCCCC");
     stage.addChild(vertical_back);
 
-    for (var i = 0; i <= max_scale_value * 2; i++) {
-      horizon_back.graphics.moveTo(startX - scale_length, startY - scale_length + (i * scale))
-              .lineTo(startX + scale_length, startY - scale_length + (i * scale));
-      vertical_back.graphics.moveTo(startX - scale_length + (i * scale), startY - scale_length)
-              .lineTo(startX - scale_length + (i * scale), startY + scale_length);
+    // 画面全体を覆うようにグリッドの最大値を計算
+    var max_scale_x = Math.ceil(startX / scale);
+    var max_scale_y = Math.ceil(startY / scale);
+
+    // 横線（Y軸方向への繰り返し）
+    for (var i = -max_scale_y; i <= max_scale_y; i++) {
+      horizon_back.graphics.moveTo(0, startY + (i * scale))
+              .lineTo(canvasWidth, startY + (i * scale));
+    }
+    // 縦線（X軸方向への繰り返し）
+    for (var i = -max_scale_x; i <= max_scale_x; i++) {
+      vertical_back.graphics.moveTo(startX + (i * scale), 0)
+              .lineTo(startX + (i * scale), canvasHeight);
     }
 
     var horizon_line = new createjs.Shape();
     horizon_line.graphics.beginStroke("#000000");
-    horizon_line.graphics.moveTo(startX - scale_length, startY)
-            .lineTo(startX + scale_length, startY);
+    horizon_line.graphics.moveTo(0, startY).lineTo(canvasWidth, startY);
     stage.addChild(horizon_line);
 
     var vertical_line = new createjs.Shape();
     vertical_line.graphics.beginStroke("#000000");
-    vertical_line.graphics.moveTo(startX, startY - scale_length)
-            .lineTo(startX, startY + scale_length);
+    vertical_line.graphics.moveTo(startX, 0).lineTo(startX, canvasHeight);
     stage.addChild(vertical_line);
 
     var bg_domain_shape = new createjs.Shape();
     stage.addChild(bg_domain_shape);
 
     var label_x = new createjs.Text("x", "20px Arial", "#000000");
-    label_x.x = startX + scale_length - 20;
+    label_x.x = canvasWidth - 20;
     label_x.y = startY + 5;
     stage.addChild(label_x);
 
     var label_y = new createjs.Text("y", "20px Arial", "#000000");
     label_y.x = startX + 8;
-    label_y.y = startY - scale_length + 5;
+    label_y.y = 5;
     stage.addChild(label_y);
 
     var label_zero = new createjs.Text("0", "20px Arial", "#000000");
@@ -246,8 +298,9 @@
         graph_line_base.graphics.beginStroke("#FF0000").setStrokeStyle(2);
 
         var isFirst = true;
-        for (var px = 0; px <= scale_length * 2; px++) {
-          var mathX = (px - scale_length) / scale;
+        // 画面の左端から右端まで描画する
+        for (var px = 0; px <= canvasWidth; px++) {
+          var mathX = (px - startX) / scale;
           var mathY = (a * mathX * mathX) + (b * mathX) + c;
           var py = startY - (mathY * scale);
 
@@ -261,8 +314,6 @@
         stage.addChild(graph_line_base);
 
       } else {
-        var canvasHeight = document.getElementById("myCanvas").height;
-        var canvasWidth = document.getElementById("myCanvas").width;
         var visPxMin = minVal === "" ? 0 : startX + xMin * scale;
         var visPxMax = maxVal === "" ? canvasWidth : startX + xMax * scale;
 
@@ -278,8 +329,8 @@
         var isFirstBase = true;
         var isFirstDomain = true;
 
-        for (var px = 0; px <= scale_length * 2; px++) {
-          var mathX = (px - scale_length) / scale;
+        for (var px = 0; px <= canvasWidth; px++) {
+          var mathX = (px - startX) / scale;
           var mathY = (a * mathX * mathX) + (b * mathX) + c;
           var py = startY - (mathY * scale);
 
@@ -323,7 +374,6 @@
           var rx = round2(x);
           var ry = round2(y);
           var key = rx + "_" + ry;
-          // 表示位置計算のために、元の浮動小数も保存する
           if (!coordMap[key]) coordMap[key] = { x: x, y: y, names: [] };
           if (!coordMap[key].names.includes(name)) {
             coordMap[key].names.push(name);
@@ -363,7 +413,6 @@
 
         for (var key in coordMap) {
           var pt = coordMap[key];
-          // Canvas上は 分子/分母 で表示
           var textStr = pt.names.join("・") + " (" + toFractionString(pt.x) + ", " + toFractionString(pt.y) + ")";
           var px = startX + pt.x * scale;
           var py = startY - pt.y * scale;
@@ -376,14 +425,16 @@
           var txt = new createjs.Text(textStr, "bold 18px Arial", "#008000");
           txtBg.outline = 5;
 
-          if (px > startX + scale_length - 100) {
+          // Canvasの端にはみ出さないよう調整
+          if (px > canvasWidth - 100) {
             txt.textAlign = "right"; txtBg.textAlign = "right";
             txt.x = px - 8; txtBg.x = px - 8;
           } else {
+            txt.textAlign = "left"; txtBg.textAlign = "left";
             txt.x = px + 8; txtBg.x = px + 8;
           }
 
-          if (py < startY - scale_length + 30) {
+          if (py < 30) {
             txt.y = py + 12; txtBg.y = py + 12;
           } else {
             txt.y = py - 22; txtBg.y = py - 22;
@@ -401,7 +452,6 @@
     document.getElementById('btn_domain').addEventListener('click', function () { drawGraph(1); });
     document.getElementById('btn_coord').addEventListener('click', function () { drawGraph(2); });
 
-    // 平方完成のHTMLを生成する共通関数
     function getSquareHtml(a, b, c) {
       if (a === 0) {
         return "<p>a = 0 のため、2次関数ではありません。</p>";
@@ -416,7 +466,6 @@
 
       var pStr = "";
       if (Math.abs(p) > 1e-10) {
-        // (x - p)^2 を実現するため、p>0の場合は符号にマイナスを補う
         pStr = "(x " + (p > 0 ? "- " : "+ ") + toFractionHTML(Math.abs(p)) + ")<sup>2</sup>";
       } else {
         pStr = "x<sup>2</sup>";
@@ -435,21 +484,15 @@
       return html;
     }
 
-    // ==========================================
-    // 1. 平方完成ボタンの処理
-    // ==========================================
     document.getElementById('btn_square').addEventListener('click', function () {
       var a = parseFloat(document.getElementById("input_a").value) || 0;
       var b = parseFloat(document.getElementById("input_b").value) || 0;
       var c = parseFloat(document.getElementById("input_c").value) || 0;
 
       document.getElementById("result_square").innerHTML = getSquareHtml(a, b, c);
-      document.getElementById("result_maxmin").innerHTML = ""; // 最大最小エリアをクリア
+      document.getElementById("result_maxmin").innerHTML = "";
     });
 
-    // ==========================================
-    // 2. 最大最小ボタンの処理
-    // ==========================================
     document.getElementById('btn_maxmin').addEventListener('click', function () {
       var a = parseFloat(document.getElementById("input_a").value) || 0;
       var b = parseFloat(document.getElementById("input_b").value) || 0;
@@ -504,7 +547,6 @@
         }
       }
 
-      // 平方完成の式と、最大最小の式を同時に表示
       document.getElementById("result_square").innerHTML = getSquareHtml(a, b, c);
       document.getElementById("result_maxmin").innerHTML = maxminHtml;
     });
