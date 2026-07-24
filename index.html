@@ -1,556 +1,806 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" crossorigin="anonymous"></script>
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      overflow: hidden;
-    }
-    #scale-wrapper {
-      position: absolute;
-      top: 0;
-      left: 0;
-      display: inline-block;
-      transform-origin: top left;
-    }
-    #myCanvas {
-      border: 1px solid #eee;
-      background-color: #fafafa;
-      border-radius: 4px;
-      /* 16:9の比率を保ったままレスポンシブに対応 */
-      width: 100%;
-      max-width: 800px;
-      height: auto;
-      aspect-ratio: 16 / 9;
-    }
-    #btn_draw, #btn_domain, #btn_coord, #btn_square, #btn_maxmin {
-      margin-right: 5px;
-      margin-bottom: 5px;
-    }
-    .app-title {
-      margin-top: 0;
-      margin-bottom: 20px;
-      padding-bottom: 10px;
-      border-bottom: 2px solid #337ab7;
-      font-weight: bold;
-    }
-    /* 分数表示を整えるためのCSSクラス */
-    .fraction {
-      display: inline-flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      vertical-align: middle;
-      font-size: 85%;
-      line-height: 1.1;
-      margin: 0 2px;
-    }
-    .fraction .num {
-      padding-bottom: 1px;
-    }
-    .fraction .den {
-      border-top: 1px solid currentColor;
-      padding-top: 1px;
-    }
-  </style>
-  <script src="https://code.createjs.com/1.0.0/createjs.min.js"></script>
+    <meta charset="UTF-8">
+    <title>単位円とsinグラフ（cosグラフ追加版）</title>
+    <style>
+        body {
+            font-family: sans-serif, 'Times New Roman', serif;
+            text-align: center;
+            font-size: 14px;
+            zoom: 65%;
+        }
+        var {
+            font-style: italic;
+            font-family: 'Times New Roman', serif;
+        }
+        canvas { border: 1px solid #ccc; display: block; }
+        .controls { display: flex; align-items: center; justify-content: center; gap: 5px; }
+        .controls button, .controls input { font-size: 14px; padding: 8px 12px; margin: 5px; cursor: pointer; }
+        .controls label { font-size: 14px; margin-left: 10px; }
+        .controls input[type="number"] { width: 60px; text-align: center; }
+
+        .canvas-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 10px auto;
+        }
+        
+        .aux-line-panel {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            border: 1px dashed #ccc;
+            border-radius: 8px;
+            padding: 8px 15px;
+            margin: 10px auto 0;
+            background-color: #fafafa;
+        }
+        .aux-line-title {
+            font-size: 13px;
+            color: #868e96;
+            font-weight: bold;
+        }
+        
+        .control-panel {
+            display: inline-flex;
+            flex-direction: row;
+            gap: 25px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px auto;
+            text-align: left;
+        }
+        .control-column {
+            display: flex;
+            flex-direction: column;
+        }
+        .control-column:not(:last-of-type) {
+            padding-right: 25px;
+            border-right: 1px solid #eee;
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            padding: 8px 5px;
+            border-bottom: 1px solid #eee;
+            min-height: 40px;
+        }
+        .control-row:last-child {
+            border-bottom: none;
+        }
+
+        .collapsible-controls {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .control-row .graph-label {
+            width: 240px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .control-row .graph-label input {
+            vertical-align: middle;
+            margin-right: 8px;
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+        .control-row:has(.graph-label input:not(:checked)) {
+            opacity: 0.4;
+        }
+        .control-row:has(.graph-label input:not(:checked)) .input-group input {
+            cursor: not-allowed;
+        }
+        .control-row .input-group {
+            margin-left: 15px;
+            font-size: 16px;
+            display: inline-flex;
+            align-items: center;
+        }
+        .control-row .input-group label {
+            font-weight: bold;
+            vertical-align: middle;
+        }
+        .control-row .input-group input[type="text"] {
+            width: 80px;
+            font-size: 16px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        
+        .table-container { margin: 20px auto; overflow-x: auto; }
+        table { border-collapse: collapse; margin: 0 auto; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; min-width: 55px; vertical-align: middle; }
+        th[data-angle] { cursor: pointer; background-color: #f9f9f9; }
+        th[data-angle]:hover { background-color: #e9e9e9; }
+        
+        .sin-value { color: #1c7ed6; font-weight: bold; font-size: 16px; }
+
+        .sin-theta-color { color: #1c7ed6; }
+        .cos-theta-color { color: #d6336c; }
+        .sin-theta-plus-a-color { color: #f76707; }
+        .sin-b-theta-color { color: #37b24d; }
+        .sin-c-theta-plus-d-color { color: #845ef7; }
+        .sin-k-theta-color { color: #e64980; }
+
+        .fraction-container { display: inline-flex; align-items: center; justify-content: center; }
+        .fraction-container > span:first-child { padding-right: 0.15em; }
+        .fraction { display: inline-flex; flex-direction: column; text-align: center; vertical-align: middle; }
+        .numerator { border-bottom: 1.5px solid currentColor; padding: 0 0.2em; }
+        .denominator { padding: 0 0.2em; }
+    </style>
 </head>
-
 <body>
-<div id="scale-wrapper">
-<div class="container" style="margin-top: 30px; width: 1300px;">
-  <div class="row">
+    <div class="canvas-wrapper">
+        <canvas id="myCanvas" width="1200" height="400"></canvas>
+    </div>
 
-    <!-- 左側：入力フォームと計算結果 -->
-    <div class="col-md-4 col-sm-12">
-      <h3 class="app-title text-primary">2次関数の最大値・最小値</h3>
+    <div class="controls">
+        <button id="playBtn">再生</button>
+        <button id="stopBtn">停止</button>
+        <button id="resetAnimationBtn">アニメーションリセット</button>
+        <button id="resetPointsBtn">プロットリセット</button>
+    </div>
+    <div class="controls">
+        <label for="speedInput">速度</label>
+        <input type="range" id="speedInput" min="0.25" max="4" step="0.25" value="1" style="width:150px;vertical-align:middle;">
+        <span id="speedValueDisplay" style="display:inline-block;width:45px;text-align:left;">×1.0</span>
+        <label style="cursor:pointer;">
+            <input type="checkbox" id="repeatToggle" style="vertical-align:middle;">
+            終わったら最初に戻って繰り返す
+        </label>
+    </div>
 
-      <div style="margin-bottom: 20px;">
-        <p style="font-size: large;">y = ax<sup>2</sup> + bx + c</p>
-      </div>
+    <div class="aux-line-panel">
+        <span class="aux-line-title">補助線</span>
+        <label class="graph-label"><input type="checkbox" id="toggleCosTheta" checked> <span class="cos-theta-color"><var>y = cos(θ)</var></span></label>
+    </div>
 
-      <div style="margin-bottom: 15px;">
-        a : <input type="text" id="input_a" value="" size="3">
-        b : <input type="text" id="input_b" value="" size="3">
-        c : <input type="text" id="input_c" value="" size="3">
-      </div>
-
-      <div style="margin-bottom: 20px; padding: 10px; background-color: #f9f9f9; border-radius: 4px;">
-        <p><strong>x の変域（空欄の場合は制限なし）:</strong></p>
-        <input type="text" id="domain_min" value="" size="3"> ≦ x ≦
-        <input type="text" id="domain_max" value="" size="3">
-      </div>
-
-      <div style="margin-bottom: 30px;">
-        <button id="btn_square" class="btn btn-success">平方完成</button>
-        <button id="btn_draw" class="btn btn-primary">グラフを表示</button>
-        <button id="btn_domain" class="btn btn-warning">変域を表示</button>
-        <button id="btn_maxmin" class="btn btn-danger">最大最小</button>
-        <button id="btn_coord" class="btn btn-info">座標を表示</button>
-      </div>
-
-      <div class="panel panel-info">
-        <div class="panel-heading"><h3 class="panel-title">関数の分析結果</h3></div>
-        <div class="panel-body" id="math_result" style="font-size: 1.1em; line-height: 1.6;">
-          <div id="result_square">数値を入力して「平方完成」または「最大最小」ボタンを押してください。</div>
-          <div id="result_maxmin"></div>
+    <div class="control-panel">
+        <div class="control-column">
+            <div class="control-row">
+                <div class="collapsible-controls">
+                    <label class="graph-label"><input type="checkbox" id="toggleSinTheta" checked> <span class="sin-theta-color"><var>y = sin(θ)</var></span></label>
+                </div>
+            </div>
+            <div class="control-row">
+                <div class="collapsible-controls">
+                    <label class="graph-label"><input type="checkbox" id="toggleSinThetaPlusA" checked> <span class="sin-theta-plus-a-color"><var>y = sin(θ+a)</var></span></label>
+                    <div class="input-group">
+                        <label for="phaseInput">位相 <var>a =</var> (</label>
+                        <input type="text" id="phaseInput" value="0" placeholder="例: 1/2">
+                        <label>) <var>× π</var></label>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
+        <div class="control-column">
+            <div class="control-row">
+                <div class="collapsible-controls">
+                    <label class="graph-label"><input type="checkbox" id="toggleSinBTheta" checked> <span class="sin-b-theta-color"><var>y = sin(bθ)</var></span></label>
+                    <div class="input-group">
+                        <label for="freqInput">周期 <var>b =</var></label>
+                        <input type="text" id="freqInput" value="1" placeholder="例: 2">
+                    </div>
+                </div>
+            </div>
+            <div class="control-row">
+                <div class="collapsible-controls">
+                    <label class="graph-label"><input type="checkbox" id="toggleSinCThetaPlusD" checked> <span class="sin-c-theta-plus-d-color"><var>y = sin(cθ+d)</var></span></label>
+                    <div class="input-group">
+                        <label for="freqCInput">周期 <var>c =</var></label>
+                        <input type="text" id="freqCInput" value="1" placeholder="例: 2">
+                    </div>
+                    <div class="input-group">
+                        <label for="phaseDInput">位相 <var>d =</var> (</label>
+                        <input type="text" id="phaseDInput" value="0" placeholder="例: 1/2">
+                        <label>) <var>× π</var></label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="control-column">
+            <div class="control-row">
+                <div class="collapsible-controls">
+                    <label class="graph-label"><input type="checkbox" id="toggleKSinTheta" checked> <span class="sin-k-theta-color"><var>y = k sin(θ)</var></span></label>
+                    <div class="input-group">
+                        <label for="ampInput">振幅 <var>k =</var></label>
+                        <input type="text" id="ampInput" value="1" placeholder="例: 2">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th><var>θ</var></th>
+                    <th data-angle="0">0</th>
+                    <th data-angle="30"><span class="fraction-container"><span class="fraction"><span class="numerator">π</span><span class="denominator">6</span></span></span></th>
+                    <th data-angle="45"><span class="fraction-container"><span class="fraction"><span class="numerator">π</span><span class="denominator">4</span></span></span></th>
+                    <th data-angle="60"><span class="fraction-container"><span class="fraction"><span class="numerator">π</span><span class="denominator">3</span></span></span></th>
+                    <th data-angle="90"><span class="fraction-container"><span class="fraction"><span class="numerator">π</span><span class="denominator">2</span></span></span></th>
+                    <th data-angle="120"><span class="fraction-container"><span class="fraction"><span class="numerator">2π</span><span class="denominator">3</span></span></span></th>
+                    <th data-angle="135"><span class="fraction-container"><span class="fraction"><span class="numerator">3π</span><span class="denominator">4</span></span></span></th>
+                    <th data-angle="150"><span class="fraction-container"><span class="fraction"><span class="numerator">5π</span><span class="denominator">6</span></span></span></th>
+                    <th data-angle="180">π</th>
+                    <th data-angle="210"><span class="fraction-container"><span class="fraction"><span class="numerator">7π</span><span class="denominator">6</span></span></span></th>
+                    <th data-angle="225"><span class="fraction-container"><span class="fraction"><span class="numerator">5π</span><span class="denominator">4</span></span></span></th>
+                    <th data-angle="240"><span class="fraction-container"><span class="fraction"><span class="numerator">4π</span><span class="denominator">3</span></span></span></th>
+                    <th data-angle="270"><span class="fraction-container"><span class="fraction"><span class="numerator">3π</span><span class="denominator">2</span></span></span></th>
+                    <th data-angle="300"><span class="fraction-container"><span class="fraction"><span class="numerator">5π</span><span class="denominator">3</span></span></span></th>
+                    <th data-angle="315"><span class="fraction-container"><span class="fraction"><span class="numerator">7π</span><span class="denominator">4</span></span></span></th>
+                    <th data-angle="330"><span class="fraction-container"><span class="fraction"><span class="numerator">11π</span><span class="denominator">6</span></span></span></th>
+                    <th data-angle="360">2π</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr id="rowSinTheta">
+                    <td><var>sin(θ)</var></td>
+                    <td id="sin-0" class="sin-value"></td> <td id="sin-30" class="sin-value"></td> <td id="sin-45" class="sin-value"></td> <td id="sin-60" class="sin-value"></td> <td id="sin-90" class="sin-value"></td> <td id="sin-120" class="sin-value"></td> <td id="sin-135" class="sin-value"></td> <td id="sin-150" class="sin-value"></td> <td id="sin-180" class="sin-value"></td> <td id="sin-210" class="sin-value"></td> <td id="sin-225" class="sin-value"></td> <td id="sin-240" class="sin-value"></td> <td id="sin-270" class="sin-value"></td> <td id="sin-300" class="sin-value"></td> <td id="sin-315" class="sin-value"></td> <td id="sin-330" class="sin-value"></td> <td id="sin-360" class="sin-value"></td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 
-    <!-- 右側：Canvas (16:9に合わせてエリアを拡大) -->
-    <div class="col-md-8 col-sm-12 text-center">
-      <!-- width 800, height 450 で 16:9 の比率に設定 -->
-      <canvas id="myCanvas" width="800" height="450"></canvas>
-    </div>
+    <script>
+        const canvas = document.getElementById('myCanvas');
+        const ctx = canvas.getContext('2d');
+        const playBtn = document.getElementById('playBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const resetAnimationBtn = document.getElementById('resetAnimationBtn');
+        const resetPointsBtn = document.getElementById('resetPointsBtn');
+        const phaseInput = document.getElementById('phaseInput');
+        const freqInput = document.getElementById('freqInput');
+        const freqCInput = document.getElementById('freqCInput');
+        const phaseDInput = document.getElementById('phaseDInput');
+        const ampInput = document.getElementById('ampInput');
+        const speedInput = document.getElementById('speedInput');
+        const speedValueDisplay = document.getElementById('speedValueDisplay');
+        const repeatToggle = document.getElementById('repeatToggle');
 
-  </div>
-</div>
-</div>
+        const toggleCosTheta = document.getElementById('toggleCosTheta');
+        const toggleSinTheta = document.getElementById('toggleSinTheta');
+        const toggleSinThetaPlusA = document.getElementById('toggleSinThetaPlusA');
+        const toggleSinBTheta = document.getElementById('toggleSinBTheta');
+        const toggleSinCThetaPlusD = document.getElementById('toggleSinCThetaPlusD');
+        const toggleKSinTheta = document.getElementById('toggleKSinTheta');
+        
+        const rowSinTheta = document.getElementById('rowSinTheta');
+        
+        const canvasWidth = canvas.width, canvasHeight = canvas.height;
+        const circleCenterX = 180, circleCenterY = 200, radius = 80;
+        const graphStartX = 360, graphY = 200;
+        const sinValuesMap = {0:"0",30:"1/2",45:"√2/2",60:"√3/2",90:"1",120:"√3/2",135:"√2/2",150:"1/2",180:"0",210:"-1/2",225:"-√2/2",240:"-√3/2",270:"-1",300:"-√3/2",315:"-√2/2",330:"-1/2",360:"0"};
+        let angle = 0, animationId = null, clickedPoints = [], phaseA = 0;
+        let frequencyB = 1;
+        let frequencyC = 1, phaseD = 0;
+        let amplitudeK = 1;
+        let animationSpeed = 1;
 
-<script>
-  // ==========================================
-  // 画面(アドインの表示領域)いっぱいに、配置はそのまま拡大表示する
-  // ==========================================
-  (function () {
-    var wrapper = document.getElementById('scale-wrapper');
+        let show = {
+            cosTheta: true,
+            sinTheta: true,
+            sinThetaPlusA: true,
+            sinBTheta: true,
+            sinCThetaPlusD: true,
+            kSinTheta: true
+        };
 
-    function fitToWindow() {
-      wrapper.style.transform = 'none';
-      var baseWidth = wrapper.offsetWidth;
-      var baseHeight = wrapper.offsetHeight;
-      if (!baseWidth || !baseHeight) return;
+        function drawFrame() {
+            ctx.clearRect(0,0,canvasWidth,canvasHeight);
+            drawBackground();
+            const drawnSignatures = new Set();
+            const labelsToDraw = new Map();
 
-      var scale = Math.min(window.innerWidth / baseWidth, window.innerHeight / baseHeight);
-      wrapper.style.transform = 'scale(' + scale + ')';
-      wrapper.style.left = ((window.innerWidth - baseWidth * scale) / 2) + 'px';
-      wrapper.style.top = ((window.innerHeight - baseHeight * scale) / 2) + 'px';
-    }
+            const mergeLabels = (newLabels, color, yOffset) => {
+                for (const [x, text] of newLabels.entries()) {
+                    if (!labelsToDraw.has(x)) {
+                        labelsToDraw.set(x, { text, color, yOffset });
+                    }
+                }
+            };
 
-    window.addEventListener('load', fitToWindow);
-    window.addEventListener('resize', fitToWindow);
-
-    if (window.ResizeObserver) {
-      new ResizeObserver(fitToWindow).observe(wrapper);
-    }
-  })();
-
-  window.addEventListener("load", init);
-
-  function init() {
-    var stage = new createjs.Stage("myCanvas");
-
-    var canvasWidth = document.getElementById("myCanvas").width;
-    var canvasHeight = document.getElementById("myCanvas").height;
-    var startX = canvasWidth / 2;
-    var startY = canvasHeight / 2;
-    var scale = 25;
-
-    // --- 背景のグリッド描画 ---
-    var horizon_back = new createjs.Shape();
-    horizon_back.graphics.beginStroke("#CCCCCC");
-    stage.addChild(horizon_back);
-
-    var vertical_back = new createjs.Shape();
-    vertical_back.graphics.beginStroke("#CCCCCC");
-    stage.addChild(vertical_back);
-
-    // 画面全体を覆うようにグリッドの最大値を計算
-    var max_scale_x = Math.ceil(startX / scale);
-    var max_scale_y = Math.ceil(startY / scale);
-
-    // 横線（Y軸方向への繰り返し）
-    for (var i = -max_scale_y; i <= max_scale_y; i++) {
-      horizon_back.graphics.moveTo(0, startY + (i * scale))
-              .lineTo(canvasWidth, startY + (i * scale));
-    }
-    // 縦線（X軸方向への繰り返し）
-    for (var i = -max_scale_x; i <= max_scale_x; i++) {
-      vertical_back.graphics.moveTo(startX + (i * scale), 0)
-              .lineTo(startX + (i * scale), canvasHeight);
-    }
-
-    var horizon_line = new createjs.Shape();
-    horizon_line.graphics.beginStroke("#000000");
-    horizon_line.graphics.moveTo(0, startY).lineTo(canvasWidth, startY);
-    stage.addChild(horizon_line);
-
-    var vertical_line = new createjs.Shape();
-    vertical_line.graphics.beginStroke("#000000");
-    vertical_line.graphics.moveTo(startX, 0).lineTo(startX, canvasHeight);
-    stage.addChild(vertical_line);
-
-    var bg_domain_shape = new createjs.Shape();
-    stage.addChild(bg_domain_shape);
-
-    var label_x = new createjs.Text("x", "20px Arial", "#000000");
-    label_x.x = canvasWidth - 20;
-    label_x.y = startY + 5;
-    stage.addChild(label_x);
-
-    var label_y = new createjs.Text("y", "20px Arial", "#000000");
-    label_y.x = startX + 8;
-    label_y.y = 5;
-    stage.addChild(label_y);
-
-    var label_zero = new createjs.Text("0", "20px Arial", "#000000");
-    label_zero.x = startX - 18;
-    label_zero.y = startY + 5;
-    stage.addChild(label_zero);
-
-    stage.update();
-
-    var graph_line_base = new createjs.Shape();
-    var graph_line_domain = new createjs.Shape();
-    var graph_dots = new createjs.Shape();
-    var graph_labels = new createjs.Container();
-
-    // ==========================================
-    // 小数を分数（近似値）に変換する関数
-    // ==========================================
-    function floatToFraction(x, tolerance) {
-      if (x === 0) return {num: 0, den: 1};
-      if (x < 0) {
-        var res = floatToFraction(-x, tolerance);
-        return {num: -res.num, den: res.den};
-      }
-      tolerance = tolerance || 1.0E-6;
-      var h1 = 1, h2 = 0, k1 = 0, k2 = 1;
-      var b = x;
-      do {
-        var a = Math.floor(b);
-        var aux = h1; h1 = a * h1 + h2; h2 = aux;
-        aux = k1; k1 = a * k1 + k2; k2 = aux;
-        b = 1 / (b - a);
-      } while (Math.abs(x - h1 / k1) > x * tolerance);
-      return {num: h1, den: k1};
-    }
-
-    // Canvas用のテキスト用分数フォーマット（例: "3/2"）
-    function toFractionString(x) {
-      if (Math.abs(x) < 1e-10) return "0";
-      if (Math.abs(Math.round(x) - x) < 1e-10) return Math.round(x).toString();
-
-      var frac = floatToFraction(x, 1e-6);
-      if (frac.den === 1) return frac.num.toString();
-
-      return frac.num + "/" + frac.den;
-    }
-
-    // HTML用のリッチな分数フォーマット
-    function toFractionHTML(x) {
-      if (Math.abs(x) < 1e-10) return "0";
-      if (Math.abs(Math.round(x) - x) < 1e-10) return Math.round(x).toString();
-
-      var frac = floatToFraction(x, 1e-6);
-      var sign = frac.num < 0 ? "-" : "";
-      var num = Math.abs(frac.num);
-      var den = frac.den;
-
-      if (den === 1) return sign + num.toString();
-
-      return sign + "<span class='fraction'><span class='num'>" + num + "</span><span class='den'>" + den + "</span></span>";
-    }
-
-    function round2(num) {
-      return Math.round(num * 100) / 100;
-    }
-
-    // ==========================================
-    // グラフ描画関数
-    // ==========================================
-    function drawGraph(drawMode) {
-      var useDomain = (drawMode >= 1);
-      var showCoords = (drawMode === 2);
-
-      var a = parseFloat(document.getElementById("input_a").value) || 0;
-      var b = parseFloat(document.getElementById("input_b").value) || 0;
-      var c = parseFloat(document.getElementById("input_c").value) || 0;
-
-      var minVal = document.getElementById("domain_min").value;
-      var maxVal = document.getElementById("domain_max").value;
-      var xMin = minVal === "" ? -Infinity : parseFloat(minVal);
-      var xMax = maxVal === "" ? Infinity : parseFloat(maxVal);
-
-      bg_domain_shape.graphics.clear();
-      stage.removeChild(graph_line_base, graph_line_domain, graph_dots, graph_labels);
-
-      graph_line_base = new createjs.Shape();
-      graph_line_domain = new createjs.Shape();
-      graph_dots = new createjs.Shape();
-      graph_labels = new createjs.Container();
-
-      if (c !== 0) {
-        var yIntTxt = new createjs.Text(toFractionString(c), "20px Arial", "#000000");
-        yIntTxt.x = startX + 8;
-        yIntTxt.y = startY - (c * scale) + 5;
-        graph_labels.addChild(yIntTxt);
-      }
-
-      if (!useDomain) {
-        graph_line_base.graphics.beginStroke("#FF0000").setStrokeStyle(2);
-
-        var isFirst = true;
-        // 画面の左端から右端まで描画する
-        for (var px = 0; px <= canvasWidth; px++) {
-          var mathX = (px - startX) / scale;
-          var mathY = (a * mathX * mathX) + (b * mathX) + c;
-          var py = startY - (mathY * scale);
-
-          if (isFirst) {
-            graph_line_base.graphics.moveTo(px, py);
-            isFirst = false;
-          } else {
-            graph_line_base.graphics.lineTo(px, py);
-          }
-        }
-        stage.addChild(graph_line_base);
-
-      } else {
-        var visPxMin = minVal === "" ? 0 : startX + xMin * scale;
-        var visPxMax = maxVal === "" ? canvasWidth : startX + xMax * scale;
-
-        bg_domain_shape.graphics.beginFill("rgba(135, 206, 235, 0.2)")
-                .drawRect(visPxMin, 0, visPxMax - visPxMin, canvasHeight);
-        bg_domain_shape.graphics.beginStroke("#6495ED").setStrokeStyle(1);
-        if (minVal !== "") bg_domain_shape.graphics.moveTo(visPxMin, 0).lineTo(visPxMin, canvasHeight);
-        if (maxVal !== "") bg_domain_shape.graphics.moveTo(visPxMax, 0).lineTo(visPxMax, canvasHeight);
-
-        graph_line_base.graphics.beginStroke("#FF0000").setStrokeStyle(1).setStrokeDash([5, 5], 0);
-        graph_line_domain.graphics.beginStroke("#FF0000").setStrokeStyle(3);
-
-        var isFirstBase = true;
-        var isFirstDomain = true;
-
-        for (var px = 0; px <= canvasWidth; px++) {
-          var mathX = (px - startX) / scale;
-          var mathY = (a * mathX * mathX) + (b * mathX) + c;
-          var py = startY - (mathY * scale);
-
-          if (isFirstBase) {
-            graph_line_base.graphics.moveTo(px, py);
-            isFirstBase = false;
-          } else {
-            graph_line_base.graphics.lineTo(px, py);
-          }
-
-          if (mathX >= xMin && mathX <= xMax) {
-            if (isFirstDomain) {
-              graph_line_domain.graphics.moveTo(px, py);
-              isFirstDomain = false;
-            } else {
-              graph_line_domain.graphics.lineTo(px, py);
+            if (show.cosTheta) {
+                drawCosCurve('#d6336c');
             }
-          } else {
-            isFirstDomain = true;
-          }
+            
+            if (show.sinTheta) {
+                const signature = `p:0,f:1,k:1`;
+                drawSinCurve('#1c7ed6', 0, 1, angle, 1);
+                drawAnimatedPoints('#1c7ed6', 0, 1, 1);
+                mergeLabels(calculateZeroCrossings('0', '1'), '#1c7ed6', 20);
+                drawnSignatures.add(signature);
+            }
+
+            if (show.sinThetaPlusA) {
+                const signature = `p:${phaseA},f:1,k:1`;
+                if (!drawnSignatures.has(signature)) {
+                    drawSinCurve('#f76707', phaseA, 1, angle, 1);
+                    drawAnimatedPoints('#f76707', phaseA, 1, 1);
+                    mergeLabels(calculateZeroCrossings(phaseInput.value, '1'), '#f76707', 35);
+                    drawnSignatures.add(signature);
+                }
+            }
+
+            if (show.sinBTheta) {
+                const signature = `p:0,f:${frequencyB},k:1`;
+                if (!drawnSignatures.has(signature)) {
+                    drawSinCurve('#37b24d', 0, frequencyB, angle, 1);
+                    drawAnimatedPoints('#37b24d', 0, frequencyB, 1);
+                    mergeLabels(calculateZeroCrossings('0', freqInput.value), '#37b24d', 50);
+                    drawnSignatures.add(signature);
+                }
+            }
+            
+            if (show.sinCThetaPlusD) {
+                const signature = `p:${phaseD},f:${frequencyC},k:1`;
+                if (!drawnSignatures.has(signature)) {
+                    drawSinCurve('#845ef7', phaseD, frequencyC, angle, 1);
+                    drawAnimatedPoints('#845ef7', phaseD, frequencyC, 1);
+                    mergeLabels(calculateZeroCrossings(phaseDInput.value, freqCInput.value), '#845ef7', 80);
+                    drawnSignatures.add(signature);
+                }
+            }
+
+            if (show.kSinTheta) {
+                const signature = `p:0,f:1,k:${amplitudeK}`;
+                if (!drawnSignatures.has(signature)) {
+                    drawSinCurve('#e64980', 0, 1, angle, amplitudeK);
+                    drawAnimatedPoints('#e64980', 0, 1, amplitudeK);
+                    mergeLabels(calculateZeroCrossings('0', '1'), '#e64980', 65);
+                    drawnSignatures.add(signature);
+                }
+            }
+            
+            drawAllLabels(labelsToDraw);
+            clickedPoints.forEach(p=>drawStaticPoint(p));
+        }
+        
+        function drawBackground() {
+            const axisColor = '#343a40';
+            const gridColor = '#000';
+            const labelColor = '#868e96';
+            const axisLabelColor = '#000';
+            const labelFont = '14px Arial';
+            const axisLabelFont = 'italic 16px "Times New Roman"';
+            const arrowheadSize = 8;
+
+            ctx.lineWidth = 1.5;
+
+            ctx.save();
+            ctx.translate(circleCenterX, circleCenterY);
+            
+            ctx.strokeStyle = axisColor;
+            ctx.beginPath();
+            ctx.moveTo(0, radius + 20); ctx.lineTo(0, -radius - 20);
+            ctx.moveTo(0, -radius - 20); ctx.lineTo(-arrowheadSize / 2, -radius - 20 + arrowheadSize);
+            ctx.moveTo(0, -radius - 20); ctx.lineTo(arrowheadSize / 2, -radius - 20 + arrowheadSize);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(-radius - 20, 0); ctx.lineTo(radius + 20, 0);
+            ctx.moveTo(radius + 20, 0); ctx.lineTo(radius + 20 - arrowheadSize, -arrowheadSize / 2);
+            ctx.moveTo(radius + 20, 0); ctx.lineTo(radius + 20 - arrowheadSize, arrowheadSize / 2);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(0, 0, radius, 0, 2 * Math.PI);
+            ctx.strokeStyle = '#adb5bd';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            ctx.lineWidth = 1.5;
+
+            ctx.fillStyle = labelColor;
+            ctx.font = labelFont;
+            ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+            ctx.fillText('1', 90, 8);
+            ctx.fillText('-1', -90, 8);
+            ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+            ctx.fillText('1', 8, -90);
+            ctx.fillText('-1', 8, 90);
+            ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+            ctx.fillText('0', -5, 5);
+
+            ctx.fillStyle = axisLabelColor;
+            ctx.font = axisLabelFont;
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText('y', 0, -radius - 28);
+            ctx.fillText('x', radius + 28, 0);
+            
+            ctx.restore();
+
+            ctx.save();
+            ctx.translate(graphStartX, graphY);
+
+            ctx.strokeStyle = axisColor;
+            ctx.beginPath();
+            ctx.moveTo(0, radius * 1.5); ctx.lineTo(0, -radius * 1.5);
+            ctx.moveTo(0, -radius * 1.5); ctx.lineTo(-arrowheadSize / 2, -radius * 1.5 + arrowheadSize);
+            ctx.moveTo(0, -radius * 1.5); ctx.lineTo(arrowheadSize / 2, -radius * 1.5 + arrowheadSize);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(0, 0); ctx.lineTo(720 + 20, 0);
+            ctx.moveTo(720 + 20, 0); ctx.lineTo(720 + 20 - arrowheadSize, -arrowheadSize / 2);
+            ctx.moveTo(720 + 20, 0); ctx.lineTo(720 + 20 - arrowheadSize, arrowheadSize / 2);
+            ctx.stroke();
+
+            ctx.strokeStyle = gridColor;
+            ctx.lineWidth = 1;
+
+            ctx.beginPath();
+            ctx.setLineDash([4, 4]);
+            ctx.moveTo(0, -radius);
+            ctx.lineTo(720, -radius);
+            ctx.moveTo(0, radius);
+            ctx.lineTo(720, radius);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            ctx.fillStyle = labelColor;
+            ctx.font = labelFont;
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('1', -8, -radius);
+            ctx.beginPath(); ctx.moveTo(-4, -radius); ctx.lineTo(4, -radius); ctx.stroke();
+            ctx.fillText('-1', -8, radius);
+            ctx.beginPath(); ctx.moveTo(-4, radius); ctx.lineTo(4, radius); ctx.stroke();
+            
+            ctx.fillStyle = axisLabelColor;
+            ctx.font = axisLabelFont;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('y', 0, -radius * 1.5 - 20);
+            ctx.fillText('θ', 720 + 28, 0);
+
+            ctx.restore();
         }
 
-        if (minVal !== "") {
-          var dotMathX1 = parseFloat(minVal);
-          var dotMathY1 = (a * dotMathX1 * dotMathX1) + (b * dotMathX1) + c;
-          graph_dots.graphics.beginFill("#FF0000").drawCircle(startX + dotMathX1 * scale, startY - dotMathY1 * scale, 4);
-        }
-        if (maxVal !== "") {
-          var dotMathX2 = parseFloat(maxVal);
-          var dotMathY2 = (a * dotMathX2 * dotMathX2) + (b * dotMathX2) + c;
-          graph_dots.graphics.beginFill("#FF0000").drawCircle(startX + dotMathX2 * scale, startY - dotMathY2 * scale, 4);
-        }
-
-        stage.addChild(graph_line_base, graph_line_domain, graph_dots);
-      }
-
-      if (showCoords) {
-        var coordMap = {};
-
-        function addLabel(x, y, name) {
-          var rx = round2(x);
-          var ry = round2(y);
-          var key = rx + "_" + ry;
-          if (!coordMap[key]) coordMap[key] = { x: x, y: y, names: [] };
-          if (!coordMap[key].names.includes(name)) {
-            coordMap[key].names.push(name);
-          }
+        function drawSinCurve(color, phase, freq, limit, amplitude) {
+            amplitude = amplitude === undefined ? 1 : amplitude;
+            ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 2;
+            ctx.save(); ctx.translate(graphStartX, graphY);
+            for (let i = 0; i <= limit; i++) {
+                const y = -radius * amplitude * Math.sin(((i * freq) + phase) * Math.PI / 180);
+                if (i === 0) ctx.moveTo(i, y); else ctx.lineTo(i, y);
+            }
+            ctx.stroke(); ctx.restore();
         }
 
-        var candidates = [];
-        if (minVal !== "") candidates.push({x: xMin, y: (a*xMin*xMin + b*xMin + c)});
-        if (maxVal !== "") candidates.push({x: xMax, y: (a*xMax*xMax + b*xMax + c)});
+        function drawCosCurve(color) {
+            ctx.save(); 
+            
+            ctx.beginPath();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            
+            ctx.setLineDash([5, 5]);
 
-        if (a !== 0) {
-          var vX = -b / (2 * a);
-          var vY = c - (b * b) / (4 * a);
-          addLabel(vX, vY, "頂点");
+            ctx.translate(graphStartX, graphY);
+            for (let i = 0; i <= 720; i++) {
+                const y = -radius * Math.cos(i * Math.PI / 180);
+                if (i === 0) ctx.moveTo(i, y); else ctx.lineTo(i, y);
+            }
+            ctx.stroke();
 
-          if (vX >= xMin && vX <= xMax) {
-            candidates.push({x: vX, y: vY});
-          }
+            ctx.restore(); 
         }
 
-        var maxCandidate = null;
-        var minCandidate = null;
-
-        if (candidates.length > 0) {
-          maxCandidate = candidates.reduce(function(max, p) { return p.y > max.y ? p : max; }, candidates[0]);
-          minCandidate = candidates.reduce(function(min, p) { return p.y < min.y ? p : min; }, candidates[0]);
+        function drawAnimatedPoints(color, phase, freq, amplitude) {
+            amplitude = amplitude === undefined ? 1 : amplitude;
+            const effectiveAngle = (angle * freq) + phase;
+            const unitCircleAngleRad = effectiveAngle * Math.PI / 180;
+            // x座標は振幅の影響を受けない（横には伸びない）
+            const pX = radius * Math.cos(unitCircleAngleRad);
+            // y座標は振幅kでスケールし、グラフ側と高さを揃える（点線を水平に保つ）
+            const pY = -radius * amplitude * Math.sin(unitCircleAngleRad);
+            const graphX = angle;
+            const graphYVal = -radius * amplitude * Math.sin(unitCircleAngleRad);
+            
+            ctx.fillStyle = color; ctx.strokeStyle = color;
+            ctx.save();ctx.translate(circleCenterX, circleCenterY);ctx.beginPath();ctx.moveTo(0, 0);ctx.lineTo(pX, pY);ctx.stroke();ctx.beginPath();ctx.arc(pX, pY, 5, 0, 2 * Math.PI);ctx.fill();ctx.restore();
+            ctx.save();ctx.translate(graphStartX, graphY);ctx.beginPath();ctx.arc(graphX, graphYVal, 5, 0, 2 * Math.PI);ctx.fill();ctx.restore();
+            ctx.beginPath();ctx.setLineDash([2, 4]);ctx.strokeStyle = '#868e96';ctx.moveTo(circleCenterX + pX, circleCenterY + pY);ctx.lineTo(graphStartX + graphX, graphY + graphYVal);ctx.stroke();ctx.setLineDash([]);
         }
 
-        if (a > 0) {
-          if (minVal === "" || maxVal === "") maxCandidate = null;
-        } else if (a < 0) {
-          if (minVal === "" || maxVal === "") minCandidate = null;
+        function drawStaticPoint(a){
+            ctx.save();
+            ctx.translate(graphStartX,graphY);
+            if(show.sinTheta){
+                const y1=-radius*Math.sin(a*Math.PI/180);
+                ctx.fillStyle='#1c7ed6';
+                ctx.beginPath();
+                ctx.arc(a,y1,4,0,2*Math.PI);
+                ctx.fill();
+            }
+            ctx.restore();
+        }
+        
+        function gcd(a, b) {
+            return b === 0 ? a : gcd(b, a % b);
         }
 
-        if (maxCandidate) addLabel(maxCandidate.x, maxCandidate.y, "最大");
-        if (minCandidate) addLabel(minCandidate.x, minCandidate.y, "最小");
-
-        for (var key in coordMap) {
-          var pt = coordMap[key];
-          var textStr = pt.names.join("・") + " (" + toFractionString(pt.x) + ", " + toFractionString(pt.y) + ")";
-          var px = startX + pt.x * scale;
-          var py = startY - pt.y * scale;
-
-          var pointDot = new createjs.Shape();
-          pointDot.graphics.beginFill("#008000").drawCircle(px, py, 5);
-          graph_labels.addChild(pointDot);
-
-          var txtBg = new createjs.Text(textStr, "bold 18px Arial", "#FFFFFF");
-          var txt = new createjs.Text(textStr, "bold 18px Arial", "#008000");
-          txtBg.outline = 5;
-
-          // Canvasの端にはみ出さないよう調整
-          if (px > canvasWidth - 100) {
-            txt.textAlign = "right"; txtBg.textAlign = "right";
-            txt.x = px - 8; txtBg.x = px - 8;
-          } else {
-            txt.textAlign = "left"; txtBg.textAlign = "left";
-            txt.x = px + 8; txtBg.x = px + 8;
-          }
-
-          if (py < 30) {
-            txt.y = py + 12; txtBg.y = py + 12;
-          } else {
-            txt.y = py - 22; txtBg.y = py - 22;
-          }
-
-          graph_labels.addChild(txtBg, txt);
+        function parseFraction(str) {
+            str = String(str).trim();
+            if (str === '') return { num: 0, den: 1 };
+            if (str.includes('/')) {
+                const parts = str.split('/');
+                if (parts.length !== 2) return { num: 0, den: 1 };
+                const num = parseInt(parts[0], 10);
+                const den = parseInt(parts[1], 10);
+                if (isNaN(num) || isNaN(den) || den === 0) return { num: 0, den: 1 };
+                return { num, den };
+            } else {
+                const num = parseFloat(str);
+                if (isNaN(num)) return { num: 0, den: 1 };
+                if (num % 1 !== 0) {
+                    let den = 1;
+                    while ((num * den) % 1 !== 0 && den < 10000) { den *= 10; }
+                    return { num: num * den, den: den };
+                }
+                return { num, den: 1 };
+            }
         }
-      }
-
-      stage.addChild(graph_labels);
-      stage.update();
-    }
-
-    document.getElementById('btn_draw').addEventListener('click', function () { drawGraph(0); });
-    document.getElementById('btn_domain').addEventListener('click', function () { drawGraph(1); });
-    document.getElementById('btn_coord').addEventListener('click', function () { drawGraph(2); });
-
-    function getSquareHtml(a, b, c) {
-      if (a === 0) {
-        return "<p>a = 0 のため、2次関数ではありません。</p>";
-      }
-      var p = -b / (2 * a);
-      var q = c - (b * b) / (4 * a);
-
-      var aStr = "";
-      if (Math.abs(a - 1) < 1e-10) aStr = "";
-      else if (Math.abs(a + 1) < 1e-10) aStr = "-";
-      else aStr = toFractionHTML(a);
-
-      var pStr = "";
-      if (Math.abs(p) > 1e-10) {
-        pStr = "(x " + (p > 0 ? "- " : "+ ") + toFractionHTML(Math.abs(p)) + ")<sup>2</sup>";
-      } else {
-        pStr = "x<sup>2</sup>";
-      }
-
-      var qStr = "";
-      if (Math.abs(q) > 1e-10) {
-        qStr = (q > 0 ? " + " : " - ") + toFractionHTML(Math.abs(q));
-      }
-
-      var equationStr = "y = " + aStr + pStr + qStr;
-
-      var html = "<p><strong>平方完成：</strong> " + equationStr + "</p>";
-      html += "<p><strong>頂点：</strong> (" + toFractionHTML(p) + ", " + toFractionHTML(q) + ")</p>";
-
-      return html;
-    }
-
-    document.getElementById('btn_square').addEventListener('click', function () {
-      var a = parseFloat(document.getElementById("input_a").value) || 0;
-      var b = parseFloat(document.getElementById("input_b").value) || 0;
-      var c = parseFloat(document.getElementById("input_c").value) || 0;
-
-      document.getElementById("result_square").innerHTML = getSquareHtml(a, b, c);
-      document.getElementById("result_maxmin").innerHTML = "";
-    });
-
-    document.getElementById('btn_maxmin').addEventListener('click', function () {
-      var a = parseFloat(document.getElementById("input_a").value) || 0;
-      var b = parseFloat(document.getElementById("input_b").value) || 0;
-      var c = parseFloat(document.getElementById("input_c").value) || 0;
-
-      var minValStr = document.getElementById("domain_min").value;
-      var maxValStr = document.getElementById("domain_max").value;
-      var xMin = minValStr === "" ? -Infinity : parseFloat(minValStr);
-      var xMax = maxValStr === "" ? Infinity : parseFloat(maxValStr);
-
-      var maxminHtml = "";
-
-      if (a !== 0) {
-        var p = -b / (2 * a);
-        var q = c - (b * b) / (4 * a);
-
-        var candidates = [];
-        if (minValStr !== "") candidates.push({ x: xMin, y: (a * xMin * xMin) + (b * xMin) + c });
-        if (maxValStr !== "") candidates.push({ x: xMax, y: (a * xMax * xMax) + (b * xMax) + c });
-        if (p >= xMin && p <= xMax) {
-          candidates.push({ x: p, y: q });
+        
+        function formatPiLabel(num, den) {
+            if (num === 0) return "0";
+            const common = gcd(Math.abs(num), Math.abs(den));
+            const n = num / common;
+            const d = den / common;
+            
+            if (d === 1) {
+                if (n === 1) return "π";
+                if (n === -1) return "-π";
+                return `${n}π`;
+            }
+            if (n === 1) return `π/${d}`;
+            if (n === -1) return `-π/${d}`;
+            return `${n}π/${d}`;
         }
+        
+        function calculateZeroCrossings(phaseStr, freqStr) {
+            const labels = new Map();
+            const phaseFrac = parseFraction(phaseStr);
+            const freqFrac = parseFraction(freqStr);
 
-        var maxInfo = null;
-        var minInfo = null;
+            if (freqFrac.num === 0) return labels;
 
-        if (candidates.length > 0) {
-          maxInfo = candidates.reduce(function(max, pt) { return pt.y > max.y ? pt : max; }, candidates[0]);
-          minInfo = candidates.reduce(function(min, pt) { return pt.y < min.y ? pt : min; }, candidates[0]);
+            const phaseDeg = (phaseFrac.num / phaseFrac.den) * 180;
+            const freqVal = freqFrac.num / freqFrac.den;
+            
+            for (let n = -20; n <= 40; n++) {
+                const x_deg = (180 * n - phaseDeg) / freqVal;
+
+                if (x_deg > 1 && x_deg <= 720) {
+                    const labelNum = (n * phaseFrac.den - phaseFrac.num) * freqFrac.den;
+                    const labelDen = phaseFrac.den * freqFrac.num;
+                    const labelText = formatPiLabel(labelNum, labelDen);
+                    
+                    const rounded_x = Math.round(x_deg);
+                    if (!labels.has(rounded_x)) {
+                        labels.set(rounded_x, labelText);
+                    }
+                }
+            }
+            return labels;
         }
+        
+        function drawAllLabels(labelsToDraw) {
+            ctx.save();
+            ctx.translate(graphStartX, graphY);
+            ctx.textAlign = 'center';
 
-        if (a > 0) {
-          if (minValStr === "" || maxValStr === "") maxInfo = null;
-        } else if (a < 0) {
-          if (minValStr === "" || maxValStr === "") minInfo = null;
-        }
+            for (const [x, label] of labelsToDraw.entries()) {
+                ctx.fillStyle = label.color;
+                ctx.strokeStyle = label.color;
+                ctx.lineWidth = 1;
+                
+                const labelText = label.text;
+                const yPos = label.yOffset;
 
-        maxminHtml += "<hr style='margin:15px 0; border-color:#d9edf7;'>";
+                if (labelText.includes('/') && labelText.length > 1) {
+                    const [numerator, denominator] = labelText.split('/');
+                    ctx.font = 'italic 12px "Times New Roman"';
+                    ctx.textBaseline = 'middle';
 
-        if (maxInfo) {
-          maxminHtml += "<p class='text-danger'><strong>最大値：</strong> " + toFractionHTML(maxInfo.y) +
-                  " <span style='font-size:0.9em;color:#555;'>（x = " + toFractionHTML(maxInfo.x) + " のとき）</span></p>";
-        } else {
-          maxminHtml += "<p><strong>最大値：</strong> なし</p>";
+                    const numWidth = ctx.measureText(numerator).width;
+                    const denWidth = ctx.measureText(denominator).width;
+                    const barWidth = Math.max(numWidth, denWidth, 10);
+                    
+                    const numeratorY = yPos + 6;
+                    const barY = yPos + 13;
+                    const denominatorY = yPos + 20;
+
+                    ctx.fillText(numerator, x, numeratorY);
+                    
+                    ctx.beginPath();
+                    ctx.setLineDash([]); 
+                    ctx.moveTo(x - barWidth / 2, barY);
+                    ctx.lineTo(x + barWidth / 2, barY);
+                    ctx.stroke();
+
+                    ctx.fillText(denominator, x, denominatorY);
+
+                } else {
+                    ctx.font = 'italic 14px "Times New Roman"';
+                    ctx.textBaseline = 'top';
+                    ctx.fillText(labelText, x, yPos);
+                }
+
+                ctx.beginPath();
+                ctx.moveTo(x, -4);
+                ctx.lineTo(x, 4);
+                ctx.setLineDash([]);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.setLineDash([2, 3]);
+                ctx.moveTo(x, 4);
+                ctx.lineTo(x, yPos);
+                ctx.stroke();
+            }
+            
+            ctx.setLineDash([]);
+            ctx.restore();
         }
 
-        if (minInfo) {
-          maxminHtml += "<p class='text-primary'><strong>最小値：</strong> " + toFractionHTML(minInfo.y) +
-                  " <span style='font-size:0.9em;color:#555;'>（x = " + toFractionHTML(minInfo.x) + " のとき）</span></p>";
-        } else {
-          maxminHtml += "<p><strong>最小値：</strong> なし</p>";
-        }
-      }
+        function animate(){
+            angle = angle + (2.5 * animationSpeed);
 
-      document.getElementById("result_square").innerHTML = getSquareHtml(a, b, c);
-      document.getElementById("result_maxmin").innerHTML = maxminHtml;
-    });
-  }
-</script>
+            if (angle >= 720) {
+                if (repeatToggle.checked) {
+                    angle = angle - 720;
+                    drawFrame();
+                    animationId = requestAnimationFrame(animate);
+                } else {
+                    angle = 720;
+                    drawFrame();
+                    cancelAnimationFrame(animationId);
+                    animationId = null;
+                }
+                return;
+            }
+            drawFrame();
+            animationId = requestAnimationFrame(animate);
+        }
+        
+        function formatFraction(valueStr) {
+            if (typeof valueStr !== 'string' || !valueStr.includes('/')) {
+                return valueStr;
+            }
+            let prefix = '';
+            if (valueStr.startsWith('-')) {
+                prefix = '<span>-</span>';
+                valueStr = valueStr.substring(1);
+            }
+            const parts = valueStr.split('/');
+            if (parts.length !== 2) {
+                return valueStr;
+            }
+            const [numerator, denominator] = parts;
+            const fractionHTML = `
+                <span class="fraction">
+                    <span class="numerator">${numerator}</span>
+                    <span class="denominator">${denominator}</span>
+                </span>`;
+            return `<span class="fraction-container">${prefix}${fractionHTML}</span>`;
+        }
+        
+        function parseCoefficient(str) {
+            str = str.trim(); if (str === '') return NaN;
+            if (str.includes('/')) {
+                const parts = str.split('/'); if (parts.length !== 2) return NaN;
+                const num = parseFloat(parts[0]), den = parseFloat(parts[1]);
+                if (isNaN(num) || isNaN(den) || den === 0) return NaN;
+                return num / den;
+            } else { return parseFloat(str); }
+        }
+
+        playBtn.addEventListener('click', () => { 
+            if (animationId === null) {
+                if (angle >= 720) { angle = 0; }
+                animate();
+            }
+        });
+        stopBtn.addEventListener('click', () => { 
+            if (animationId !== null) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+        });
+        resetAnimationBtn.addEventListener('click', () => { 
+            angle = 0;
+            if (animationId !== null) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            drawFrame(); 
+        });
+        resetPointsBtn.addEventListener('click', () => { 
+            clickedPoints = []; 
+            document.querySelectorAll('.sin-value').forEach(c=>c.innerHTML='');
+            drawFrame();
+        });
+
+        toggleCosTheta.addEventListener('change', (e) => {
+            show.cosTheta = e.target.checked;
+            drawFrame();
+        });
+
+        phaseInput.addEventListener('input', () => {
+            const val = parseCoefficient(phaseInput.value); phaseA = !isNaN(val) ? val * 180 : 0;
+            drawFrame();
+        });
+
+        freqInput.addEventListener('input', () => {
+            const val = parseCoefficient(freqInput.value); frequencyB = !isNaN(val) && val > 0 ? val : 1;
+            drawFrame();
+        });
+
+        freqCInput.addEventListener('input', () => {
+            const val = parseCoefficient(freqCInput.value); frequencyC = !isNaN(val) && val > 0 ? val : 1;
+            drawFrame();
+        });
+
+        phaseDInput.addEventListener('input', () => {
+            const val = parseCoefficient(phaseDInput.value); phaseD = !isNaN(val) ? val * 180 : 0;
+            drawFrame();
+        });
+
+        ampInput.addEventListener('input', () => {
+            const val = parseCoefficient(ampInput.value); amplitudeK = !isNaN(val) ? val : 1;
+            drawFrame();
+        });
+
+        speedInput.addEventListener('input', () => {
+            const val = parseFloat(speedInput.value);
+            animationSpeed = (!isNaN(val) && val > 0) ? val : 1;
+            speedValueDisplay.textContent = '×' + animationSpeed.toFixed(2).replace(/0+$/,'').replace(/\.$/,'.0');
+        });
+        
+        document.querySelectorAll('th[data-angle]').forEach(th => {
+            th.addEventListener('click', () => {
+                const a = parseInt(th.dataset.angle); 
+                if (isNaN(a)) return;
+
+                const s = sinValuesMap[a];
+                const c = document.getElementById('sin-' + a);
+                if (c && s !== undefined) c.innerHTML = formatFraction(s);
+                if (!clickedPoints.includes(a)) clickedPoints.push(a);
+                drawFrame();
+            });
+        });
+        
+        toggleSinTheta.addEventListener('change', (e) => {
+            show.sinTheta = e.target.checked;
+            drawFrame();
+        });
+        toggleSinThetaPlusA.addEventListener('change', (e) => {
+            show.sinThetaPlusA = e.target.checked;
+            drawFrame();
+        });
+        toggleSinBTheta.addEventListener('change', (e) => {
+            show.sinBTheta = e.target.checked;
+            drawFrame();
+        });
+        toggleSinCThetaPlusD.addEventListener('change', (e) => {
+            show.sinCThetaPlusD = e.target.checked;
+            drawFrame();
+        });
+        toggleKSinTheta.addEventListener('change', (e) => {
+            show.kSinTheta = e.target.checked;
+            drawFrame();
+        });
+
+        window.addEventListener('load', () => drawFrame());
+    </script>
 </body>
 </html>
